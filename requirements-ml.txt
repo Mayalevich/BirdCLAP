@@ -1,0 +1,7 @@
+# Optional stack for scripts/mini_clap_xc_sample.py (after: pip install -r requirements.txt)
+# MP3 decoding via librosa often requires ffmpeg: https://ffmpeg.org/download.html
+torch>=2.2.0
+transformers>=4.40.0
+librosa>=0.10.0
+soundfile>=0.12.0
+numpy>=1.26.0
