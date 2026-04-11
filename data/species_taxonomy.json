@@ -1,0 +1,4520 @@
+{
+  "Acadian Flycatcher": {
+    "scientific": "Empidonax virescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Alder Flycatcher": {
+    "scientific": "Empidonax alnorum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "American Avocet": {
+    "scientific": "Recurvirostra americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Recurvirostridae",
+    "genus": "Recurvirostra"
+  },
+  "American Barn Owl": {
+    "scientific": "Tyto furcata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Tytonidae",
+    "genus": "Tyto"
+  },
+  "American Bittern": {
+    "scientific": "Botaurus lentiginosus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Botaurus"
+  },
+  "American Black Duck": {
+    "scientific": "Anas rubripes",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anas"
+  },
+  "American Black Swift": {
+    "scientific": "Cypseloides niger",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Apodidae",
+    "genus": "Cypseloides"
+  },
+  "American Bullfrog": {
+    "scientific": "Lithobates catesbeianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "American Bushtit": {
+    "scientific": "Psaltriparus minimus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Aegithalidae",
+    "genus": "Psaltriparus"
+  },
+  "American Cliff Swallow": {
+    "scientific": "Petrochelidon pyrrhonota",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Petrochelidon"
+  },
+  "American Coot": {
+    "scientific": "Fulica americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Fulica"
+  },
+  "American Crow": {
+    "scientific": "Corvus brachyrhynchos",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Corvus"
+  },
+  "American Dipper": {
+    "scientific": "Cinclus mexicanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cinclidae",
+    "genus": "Cinclus"
+  },
+  "American Dusky Flycatcher": {
+    "scientific": "Empidonax oberholseri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "American Golden Plover": {
+    "scientific": "Pluvialis dominica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Pluvialis"
+  },
+  "American Golden-Plover": {
+    "scientific": "Pluvialis dominica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Pluvialis"
+  },
+  "American Goldfinch": {
+    "scientific": "Spinus tristis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Spinus"
+  },
+  "American Grey Flycatcher": {
+    "scientific": "Empidonax wrightii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "American Herring Gull": {
+    "scientific": "Larus smithsonianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "American Kestrel": {
+    "scientific": "Falco sparverius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Falconiformes",
+    "family": "Falconidae",
+    "genus": "Falco"
+  },
+  "American Pipit": {
+    "scientific": "Anthus rubescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Anthus"
+  },
+  "American Redstart": {
+    "scientific": "Setophaga ruticilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "American Robin": {
+    "scientific": "Turdus migratorius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Turdus"
+  },
+  "American Three-toed Woodpecker": {
+    "scientific": "Picoides dorsalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Picoides"
+  },
+  "American Toad": {
+    "scientific": "Anaxyrus americanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Bufonidae",
+    "genus": "Anaxyrus"
+  },
+  "American Tree Sparrow": {
+    "scientific": "Spizelloides arborea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Spizelloides"
+  },
+  "American Wigeon": {
+    "scientific": "Mareca americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Mareca"
+  },
+  "American Woodcock": {
+    "scientific": "Scolopax minor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Scolopax"
+  },
+  "American Yellow Warbler": {
+    "scientific": "Setophaga aestiva/petechia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Ancient Murrelet": {
+    "scientific": "Synthliboramphus antiquus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Synthliboramphus"
+  },
+  "Anna's Hummingbird": {
+    "scientific": "Calypte anna",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Trochilidae",
+    "genus": "Calypte"
+  },
+  "Arctic Redpoll": {
+    "scientific": "Acanthis hornemanni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Acanthis"
+  },
+  "Arctic Tern": {
+    "scientific": "Sterna paradisaea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Sterna"
+  },
+  "Audubon's Warbler": {
+    "scientific": "Setophaga coronata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Baird's Sandpiper": {
+    "scientific": "Calidris bairdii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Baird's Sparrow": {
+    "scientific": "Centronyx bairdii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Centronyx"
+  },
+  "Bald Eagle": {
+    "scientific": "Haliaeetus leucocephalus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Haliaeetus"
+  },
+  "Baltimore Oriole": {
+    "scientific": "Icterus galbula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Icterus"
+  },
+  "Band-tailed Pigeon": {
+    "scientific": "Patagioenas fasciata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Patagioenas"
+  },
+  "Bank Swallow": {
+    "scientific": "Riparia riparia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Riparia"
+  },
+  "Barn Owl": {
+    "scientific": "Tyto furcata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Tytonidae",
+    "genus": "Tyto"
+  },
+  "Barn Swallow": {
+    "scientific": "Hirundo rustica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Hirundo"
+  },
+  "Barred Owl": {
+    "scientific": "Strix varia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Strix"
+  },
+  "Barrow's Goldeneye": {
+    "scientific": "Bucephala islandica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Bucephala"
+  },
+  "Bay-breasted Warbler": {
+    "scientific": "Setophaga castanea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Bell's Vireo": {
+    "scientific": "Vireo bellii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Belted Kingfisher": {
+    "scientific": "Megaceryle alcyon",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Coraciiformes",
+    "family": "Alcedinidae",
+    "genus": "Megaceryle"
+  },
+  "Bewick's Wren": {
+    "scientific": "Thryomanes bewickii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Thryomanes"
+  },
+  "Bicknell's Thrush": {
+    "scientific": "Catharus bicknelli",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Big Brown Bat": {
+    "scientific": "Eptesicus fuscus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Eptesicus"
+  },
+  "Black Guillemot": {
+    "scientific": "Cepphus grylle",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Cepphus"
+  },
+  "Black Oystercatcher": {
+    "scientific": "Haematopus bachmani",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Haematopodidae",
+    "genus": "Haematopus"
+  },
+  "Black Rail": {
+    "scientific": "Laterallus jamaicensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Laterallus"
+  },
+  "Black Scoter": {
+    "scientific": "Melanitta americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Melanitta"
+  },
+  "Black Swift": {
+    "scientific": "Cypseloides niger",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Apodidae",
+    "genus": "Cypseloides"
+  },
+  "Black Tern": {
+    "scientific": "Chlidonias niger",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Chlidonias"
+  },
+  "Black Turnstone": {
+    "scientific": "Arenaria melanocephala",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Arenaria"
+  },
+  "Black-and-white Warbler": {
+    "scientific": "Mniotilta varia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Mniotilta"
+  },
+  "Black-backed Woodpecker": {
+    "scientific": "Picoides arcticus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Picoides"
+  },
+  "Black-bellied Plover": {
+    "scientific": "Pluvialis squatarola",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Pluvialis"
+  },
+  "Black-bellied Whistling Duck": {
+    "scientific": "Dendrocygna autumnalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Dendrocygna"
+  },
+  "Black-billed Cuckoo": {
+    "scientific": "Coccyzus erythropthalmus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Cuculiformes",
+    "family": "Cuculidae",
+    "genus": "Coccyzus"
+  },
+  "Black-billed Magpie": {
+    "scientific": "Pica hudsonia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Pica"
+  },
+  "Black-capped Chickadee": {
+    "scientific": "Poecile atricapillus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Poecile"
+  },
+  "Black-crowned Night Heron": {
+    "scientific": "Nycticorax nycticorax",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Nycticorax"
+  },
+  "Black-footed Albatross": {
+    "scientific": "Phoebastria nigripes",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Procellariiformes",
+    "family": "Diomedeidae",
+    "genus": "Phoebastria"
+  },
+  "Black-headed Grosbeak": {
+    "scientific": "Pheucticus melanocephalus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Pheucticus"
+  },
+  "Black-legged Kittiwake": {
+    "scientific": "Rissa tridactyla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Rissa"
+  },
+  "Black-necked Grebe": {
+    "scientific": "Podiceps nigricollis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Podiceps"
+  },
+  "Black-necked Stilt": {
+    "scientific": "Himantopus mexicanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Recurvirostridae",
+    "genus": "Himantopus"
+  },
+  "Black-throated Blue Warbler": {
+    "scientific": "Setophaga caerulescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Black-throated Gray Warbler": {
+    "scientific": "Setophaga nigrescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Black-throated Green Warbler": {
+    "scientific": "Setophaga virens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Black-throated Grey Warbler": {
+    "scientific": "Setophaga nigrescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Blackburnian Warbler": {
+    "scientific": "Setophaga fusca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Blackpoll Warbler": {
+    "scientific": "Setophaga striata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Blue Jay": {
+    "scientific": "Cyanocitta cristata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Cyanocitta"
+  },
+  "Blue-gray Gnatcatcher": {
+    "scientific": "Polioptila caerulea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Polioptilidae",
+    "genus": "Polioptila"
+  },
+  "Blue-grey Gnatcatcher": {
+    "scientific": "Polioptila caerulea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Polioptilidae",
+    "genus": "Polioptila"
+  },
+  "Blue-headed Vireo": {
+    "scientific": "Vireo solitarius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Blue-winged Teal": {
+    "scientific": "Spatula discors",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Spatula"
+  },
+  "Blue-winged Warbler": {
+    "scientific": "Vermivora cyanoptera",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Vermivora"
+  },
+  "Bobolink": {
+    "scientific": "Dolichonyx oryzivorus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Dolichonyx"
+  },
+  "Bohemian Waxwing": {
+    "scientific": "Bombycilla garrulus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Bombycillidae",
+    "genus": "Bombycilla"
+  },
+  "Bonaparte's Gull": {
+    "scientific": "Chroicocephalus philadelphia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Chroicocephalus"
+  },
+  "Boreal Chickadee": {
+    "scientific": "Poecile hudsonicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Poecile"
+  },
+  "Boreal Chorus Frog": {
+    "scientific": "Pseudacris maculata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Hylidae",
+    "genus": "Pseudacris"
+  },
+  "Boreal Owl": {
+    "scientific": "Aegolius funereus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Aegolius"
+  },
+  "Brant": {
+    "scientific": "Branta bernicla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Branta"
+  },
+  "Brant Goose": {
+    "scientific": "Branta bernicla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Branta"
+  },
+  "Brewer's Blackbird": {
+    "scientific": "Euphagus cyanocephalus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Euphagus"
+  },
+  "Brewer's Sparrow": {
+    "scientific": "Spizella breweri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Spizella"
+  },
+  "Broad-winged Bush-katydid": {
+    "scientific": "Scudderia pistillata",
+    "kingdom": "Animalia",
+    "phylum": "Arthropoda",
+    "class": "Insecta",
+    "order": "Orthoptera",
+    "family": "Tettigoniidae",
+    "genus": "Scudderia"
+  },
+  "Broad-winged Hawk": {
+    "scientific": "Buteo platypterus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Buteo"
+  },
+  "Bronze Frog": {
+    "scientific": "Lithobates clamitans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "Brown Creeper": {
+    "scientific": "Certhia americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Certhiidae",
+    "genus": "Certhia"
+  },
+  "Brown Thrasher": {
+    "scientific": "Toxostoma rufum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Mimidae",
+    "genus": "Toxostoma"
+  },
+  "Brown-headed Cowbird": {
+    "scientific": "Molothrus ater",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Molothrus"
+  },
+  "Buff-bellied Pipit": {
+    "scientific": "Anthus rubescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Anthus"
+  },
+  "Bufflehead": {
+    "scientific": "Bucephala albeola",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Bucephala"
+  },
+  "Bullock's Oriole": {
+    "scientific": "Icterus bullockii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Icterus"
+  },
+  "Burrowing Owl": {
+    "scientific": "Athene cunicularia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Athene"
+  },
+  "Bushtit": {
+    "scientific": "Psaltriparus minimus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Aegithalidae",
+    "genus": "Psaltriparus"
+  },
+  "Cackling Goose": {
+    "scientific": "Branta hutchinsii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Branta"
+  },
+  "California Gull": {
+    "scientific": "Larus californicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "California Quail": {
+    "scientific": "Callipepla californica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Odontophoridae",
+    "genus": "Callipepla"
+  },
+  "Calliope Hummingbird": {
+    "scientific": "Selasphorus calliope",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Trochilidae",
+    "genus": "Selasphorus"
+  },
+  "Canada Goose": {
+    "scientific": "Branta canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Branta"
+  },
+  "Canada Jay": {
+    "scientific": "Perisoreus canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Perisoreus"
+  },
+  "Canada Warbler": {
+    "scientific": "Cardellina canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Cardellina"
+  },
+  "Canadian Lynx": {
+    "scientific": "Lynx canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Felidae",
+    "genus": "Lynx"
+  },
+  "Canadian Toad": {
+    "scientific": "Anaxyrus hemiophrys",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Bufonidae",
+    "genus": "Anaxyrus"
+  },
+  "Canyon Wren": {
+    "scientific": "Catherpes mexicanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Catherpes"
+  },
+  "Cape May Warbler": {
+    "scientific": "Setophaga tigrina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Carolina Wren": {
+    "scientific": "Thryothorus ludovicianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Thryothorus"
+  },
+  "Caspian Tern": {
+    "scientific": "Hydroprogne caspia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Hydroprogne"
+  },
+  "Cassin's Auklet": {
+    "scientific": "Ptychoramphus aleuticus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Ptychoramphus"
+  },
+  "Cassin's Finch": {
+    "scientific": "Haemorhous cassinii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Haemorhous"
+  },
+  "Cassin's Vireo": {
+    "scientific": "Vireo cassinii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Cedar Waxwing": {
+    "scientific": "Bombycilla cedrorum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Bombycillidae",
+    "genus": "Bombycilla"
+  },
+  "Cerulean Warbler": {
+    "scientific": "Setophaga cerulea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Chestnut-backed Chickadee": {
+    "scientific": "Poecile rufescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Poecile"
+  },
+  "Chestnut-collared Longspur": {
+    "scientific": "Calcarius ornatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Calcariidae",
+    "genus": "Calcarius"
+  },
+  "Chestnut-sided Warbler": {
+    "scientific": "Setophaga pensylvanica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Chimney Swift": {
+    "scientific": "Chaetura pelagica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Apodidae",
+    "genus": "Chaetura"
+  },
+  "Chinese Blackbird": {
+    "scientific": "Turdus mandarinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Turdus"
+  },
+  "Chipping Sparrow": {
+    "scientific": "Spizella passerina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Spizella"
+  },
+  "Chuck-will's-widow": {
+    "scientific": "Antrostomus carolinensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Caprimulgiformes",
+    "family": "Caprimulgidae",
+    "genus": "Antrostomus"
+  },
+  "Citrine Wagtail": {
+    "scientific": "Motacilla citreola",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Motacilla"
+  },
+  "Clapper Rail": {
+    "scientific": "Rallus crepitans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Rallus"
+  },
+  "Clark's Nutcracker": {
+    "scientific": "Nucifraga columbiana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Nucifraga"
+  },
+  "Clay-colored Sparrow": {
+    "scientific": "Spizella pallida",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Spizella"
+  },
+  "Cliff Swallow": {
+    "scientific": "Petrochelidon pyrrhonota",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Petrochelidon"
+  },
+  "Collared Pika": {
+    "scientific": "Ochotona collaris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Lagomorpha",
+    "family": "Ochotonidae",
+    "genus": "Ochotona"
+  },
+  "Common Eider": {
+    "scientific": "Somateria mollissima",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Somateria"
+  },
+  "Common Gallinule": {
+    "scientific": "Gallinula galeata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Gallinula"
+  },
+  "Common Goldeneye": {
+    "scientific": "Bucephala clangula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Bucephala"
+  },
+  "Common Grackle": {
+    "scientific": "Quiscalus quiscula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Quiscalus"
+  },
+  "Common Loon": {
+    "scientific": "Gavia immer",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gaviiformes",
+    "family": "Gaviidae",
+    "genus": "Gavia"
+  },
+  "Common Merganser": {
+    "scientific": "Mergus merganser",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Mergus"
+  },
+  "Common Murre": {
+    "scientific": "Uria aalge",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Uria"
+  },
+  "Common Nighthawk": {
+    "scientific": "Chordeiles minor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Caprimulgiformes",
+    "family": "Caprimulgidae",
+    "genus": "Chordeiles"
+  },
+  "Common Pheasant": {
+    "scientific": "Phasianus colchicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Phasianus"
+  },
+  "Common Poorwill": {
+    "scientific": "Phalaenoptilus nuttallii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Caprimulgiformes",
+    "family": "Caprimulgidae",
+    "genus": "Phalaenoptilus"
+  },
+  "Common Raven": {
+    "scientific": "Corvus corax",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Corvus"
+  },
+  "Common Redpoll": {
+    "scientific": "Acanthis flammea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Acanthis"
+  },
+  "Common Starling": {
+    "scientific": "Sturnus vulgaris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sturnidae",
+    "genus": "Sturnus"
+  },
+  "Common Tern": {
+    "scientific": "Sterna hirundo",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Sterna"
+  },
+  "Common Yellowthroat": {
+    "scientific": "Geothlypis trichas",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Geothlypis"
+  },
+  "Connecticut Warbler": {
+    "scientific": "Oporornis agilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Oporornis"
+  },
+  "Cordilleran Flycatcher": {
+    "scientific": "Empidonax occidentalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Coyote": {
+    "scientific": "Canis latrans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Carnivora",
+    "family": "Canidae",
+    "genus": "Canis"
+  },
+  "Crested Myna": {
+    "scientific": "Acridotheres cristatellus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sturnidae",
+    "genus": "Acridotheres"
+  },
+  "Dark-eyed Junco": {
+    "scientific": "Junco hyemalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Junco"
+  },
+  "Dickcissel": {
+    "scientific": "Spiza americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Spiza"
+  },
+  "Double-crested Cormorant": {
+    "scientific": "Nannopterum auritum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Suliformes",
+    "family": "Phalacrocoracidae",
+    "genus": "Phalacrocorax"
+  },
+  "Downy Woodpecker": {
+    "scientific": "Dryobates pubescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Dryobates"
+  },
+  "Dunlin": {
+    "scientific": "Calidris alpina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Dusky Flycatcher": {
+    "scientific": "Empidonax oberholseri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Dusky Grouse": {
+    "scientific": "Dendragapus obscurus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Dendragapus"
+  },
+  "Eared Grebe": {
+    "scientific": "Podiceps nigricollis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Podiceps"
+  },
+  "Eastern Bluebird": {
+    "scientific": "Sialia sialis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Sialia"
+  },
+  "Eastern Chipmunk": {
+    "scientific": "Tamias striatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Sciuridae",
+    "genus": "Tamias"
+  },
+  "Eastern Gray Squirrel": {
+    "scientific": "Sciurus carolinensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Sciuridae",
+    "genus": "Sciurus"
+  },
+  "Eastern Gray Treefrog": {
+    "scientific": "Hyla versicolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Hylidae",
+    "genus": "Dryophytes"
+  },
+  "Eastern Kingbird": {
+    "scientific": "Tyrannus tyrannus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Tyrannus"
+  },
+  "Eastern Meadowlark": {
+    "scientific": "Sturnella magna",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Sturnella"
+  },
+  "Eastern Osprey": {
+    "scientific": "Pandion haliaetus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Pandionidae",
+    "genus": "Pandion"
+  },
+  "Eastern Phoebe": {
+    "scientific": "Sayornis phoebe",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Sayornis"
+  },
+  "Eastern Red Bat": {
+    "scientific": "Lasiurus borealis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Lasiurus"
+  },
+  "Eastern Screech Owl": {
+    "scientific": "Megascops asio",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Megascops"
+  },
+  "Eastern Screech-Owl": {
+    "scientific": "Megascops asio",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Megascops"
+  },
+  "Eastern Small-footed Myotis": {
+    "scientific": "Myotis leibii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Myotis"
+  },
+  "Eastern Towhee": {
+    "scientific": "Pipilo erythrophthalmus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Pipilo"
+  },
+  "Eastern Whip-poor-will": {
+    "scientific": "Antrostomus vociferus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Caprimulgiformes",
+    "family": "Caprimulgidae",
+    "genus": "Antrostomus"
+  },
+  "Eastern Wood Pewee": {
+    "scientific": "Contopus virens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Contopus"
+  },
+  "Eastern Wood-Pewee": {
+    "scientific": "Contopus virens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Contopus"
+  },
+  "Eastern Yellow Wagtail": {
+    "scientific": "Motacilla tschutschensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Motacilla"
+  },
+  "Eurasian Collared Dove": {
+    "scientific": "Streptopelia decaocto",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Streptopelia"
+  },
+  "Eurasian Collared-Dove": {
+    "scientific": "Streptopelia decaocto",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Streptopelia"
+  },
+  "Eurasian Skylark": {
+    "scientific": "Alauda arvensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Alaudidae",
+    "genus": "Alauda"
+  },
+  "Eurasian Wigeon": {
+    "scientific": "Mareca penelope",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Mareca"
+  },
+  "European Herring Gull": {
+    "scientific": "Larus smithsonianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "European Starling": {
+    "scientific": "Sturnus vulgaris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sturnidae",
+    "genus": "Sturnus"
+  },
+  "Evening Grosbeak": {
+    "scientific": "Hesperiphona vespertina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Hesperiphona"
+  },
+  "Field Sparrow": {
+    "scientific": "Spizella pusilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Spizella"
+  },
+  "Fish Crow": {
+    "scientific": "Corvus ossifragus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Corvus"
+  },
+  "Flammulated Owl": {
+    "scientific": "Psiloscops flammeolus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Psiloscops"
+  },
+  "Fork-tailed Storm Petrel": {
+    "scientific": "Hydrobates furcatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Procellariiformes",
+    "family": "Hydrobatidae",
+    "genus": "Oceanodroma"
+  },
+  "Forster's Tern": {
+    "scientific": "Sterna forsteri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Sterna"
+  },
+  "Fox Sparrow": {
+    "scientific": "Passerella iliaca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Passerella"
+  },
+  "Franklin's Gull": {
+    "scientific": "Leucophaeus pipixcan",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Leucophaeus"
+  },
+  "Gadwall": {
+    "scientific": "Mareca strepera",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Mareca"
+  },
+  "Glaucous Gull": {
+    "scientific": "Larus hyperboreus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Glaucous-winged Gull": {
+    "scientific": "Larus glaucescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Golden Eagle": {
+    "scientific": "Aquila chrysaetos",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Aquila"
+  },
+  "Golden-crowned Kinglet": {
+    "scientific": "Regulus satrapa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Regulidae",
+    "genus": "Regulus"
+  },
+  "Golden-crowned Sparrow": {
+    "scientific": "Zonotrichia atricapilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Zonotrichia"
+  },
+  "Golden-winged Warbler": {
+    "scientific": "Vermivora chrysoptera",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Vermivora"
+  },
+  "Grasshopper Sparrow": {
+    "scientific": "Ammodramus savannarum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Ammodramus"
+  },
+  "Gray Catbird": {
+    "scientific": "Dumetella carolinensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Mimidae",
+    "genus": "Dumetella"
+  },
+  "Gray Flycatcher": {
+    "scientific": "Empidonax wrightii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Gray Partridge": {
+    "scientific": "Perdix perdix",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Perdix"
+  },
+  "Gray Treefrog": {
+    "scientific": "Hyla versicolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Hylidae",
+    "genus": "Dryophytes"
+  },
+  "Gray-cheeked Thrush": {
+    "scientific": "Catharus minimus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Gray-headed Chickadee": {
+    "scientific": "Poecile cinctus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Poecile"
+  },
+  "Great Basin Spadefoot": {
+    "scientific": "Spea intermontana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Scaphiopodidae",
+    "genus": "Spea"
+  },
+  "Great Black-backed Gull": {
+    "scientific": "Larus marinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Great Blue Heron": {
+    "scientific": "Ardea herodias",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Ardea"
+  },
+  "Great Crested Flycatcher": {
+    "scientific": "Myiarchus crinitus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Myiarchus"
+  },
+  "Great Egret": {
+    "scientific": "Ardea alba",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Ardea"
+  },
+  "Great Gray Owl": {
+    "scientific": "Strix nebulosa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Strix"
+  },
+  "Great Grey Owl": {
+    "scientific": "Strix nebulosa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Strix"
+  },
+  "Great Horned Owl": {
+    "scientific": "Bubo virginianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Bubo"
+  },
+  "Great Plains Toad": {
+    "scientific": "Anaxyrus cognatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Bufonidae",
+    "genus": "Anaxyrus"
+  },
+  "Greater Scaup": {
+    "scientific": "Aythya marila",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Aythya"
+  },
+  "Greater White-fronted Goose": {
+    "scientific": "Anser albifrons",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anser"
+  },
+  "Greater Yellowlegs": {
+    "scientific": "Tringa melanoleuca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Tringa"
+  },
+  "Green Frog": {
+    "scientific": "Lithobates clamitans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "Green Heron": {
+    "scientific": "Butorides virescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Butorides"
+  },
+  "Green-winged Teal": {
+    "scientific": "Anas crecca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anas"
+  },
+  "Grey Catbird": {
+    "scientific": "Dumetella carolinensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Mimidae",
+    "genus": "Dumetella"
+  },
+  "Grey Partridge": {
+    "scientific": "Perdix perdix",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Perdix"
+  },
+  "Grey Plover": {
+    "scientific": "Pluvialis squatarola",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Pluvialis"
+  },
+  "Grey-cheeked Thrush": {
+    "scientific": "Catharus minimus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Grey-crowned Rosy Finch": {
+    "scientific": "Leucosticte tephrocotis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Leucosticte"
+  },
+  "Gyrfalcon": {
+    "scientific": "Falco rusticolus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Falconiformes",
+    "family": "Falconidae",
+    "genus": "Falco"
+  },
+  "Hairy Woodpecker": {
+    "scientific": "Leuconotopicus villosus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Leuconotopicus"
+  },
+  "Hammond's Flycatcher": {
+    "scientific": "Empidonax hammondii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Harlequin Duck": {
+    "scientific": "Histrionicus histrionicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Histrionicus"
+  },
+  "Harris's Sparrow": {
+    "scientific": "Zonotrichia querula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Zonotrichia"
+  },
+  "Heermann's Gull": {
+    "scientific": "Larus heermanni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Henslow's Sparrow": {
+    "scientific": "Centronyx henslowii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Centronyx"
+  },
+  "Hermit Thrush": {
+    "scientific": "Catharus guttatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Hermit Warbler": {
+    "scientific": "Setophaga occidentalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Herring Gull": {
+    "scientific": "Larus smithsonianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Hooded Merganser": {
+    "scientific": "Lophodytes cucullatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Lophodytes"
+  },
+  "Hooded Warbler": {
+    "scientific": "Setophaga citrina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Horned Grebe": {
+    "scientific": "Podiceps auritus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Podiceps"
+  },
+  "Horned Lark": {
+    "scientific": "Eremophila alpestris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Alaudidae",
+    "genus": "Eremophila"
+  },
+  "House Finch": {
+    "scientific": "Haemorhous mexicanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Haemorhous"
+  },
+  "House Sparrow": {
+    "scientific": "Passer domesticus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passeridae",
+    "genus": "Passer"
+  },
+  "House Wren": {
+    "scientific": "Troglodytes aedon",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Troglodytes"
+  },
+  "Hudsonian Godwit": {
+    "scientific": "Limosa haemastica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Limosa"
+  },
+  "Hudsonian Whimbrel": {
+    "scientific": "Numenius hudsonicus/phaeopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Numenius"
+  },
+  "Hutton's Vireo": {
+    "scientific": "Vireo huttoni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Iceland Gull": {
+    "scientific": "Larus glaucoides",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Indigo Bunting": {
+    "scientific": "Passerina cyanea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Passerina"
+  },
+  "Kentucky Warbler": {
+    "scientific": "Geothlypis formosa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Geothlypis"
+  },
+  "Killdeer": {
+    "scientific": "Charadrius vociferus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Charadrius"
+  },
+  "King Rail": {
+    "scientific": "Rallus elegans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Rallus"
+  },
+  "Kirtland's Warbler": {
+    "scientific": "Setophaga kirtlandii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Lapland Longspur": {
+    "scientific": "Calcarius lapponicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Calcariidae",
+    "genus": "Calcarius"
+  },
+  "Lark Bunting": {
+    "scientific": "Calamospiza melanocorys",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Calamospiza"
+  },
+  "Lark Sparrow": {
+    "scientific": "Chondestes grammacus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Chondestes"
+  },
+  "Lazuli Bunting": {
+    "scientific": "Passerina amoena",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Passerina"
+  },
+  "LeConte's Sparrow": {
+    "scientific": "Ammospiza leconteii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Ammospiza"
+  },
+  "Leach's Storm Petrel": {
+    "scientific": "Hydrobates leucorhous",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Procellariiformes",
+    "family": "Hydrobatidae",
+    "genus": "Oceanodroma"
+  },
+  "Least Bittern": {
+    "scientific": "Botaurus exilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Pelecaniformes",
+    "family": "Ardeidae",
+    "genus": "Botaurus"
+  },
+  "Least Flycatcher": {
+    "scientific": "Empidonax minimus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Least Sandpiper": {
+    "scientific": "Calidris minutilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Lesser Black-backed Gull": {
+    "scientific": "Larus fuscus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Lesser Scaup": {
+    "scientific": "Aythya affinis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Aythya"
+  },
+  "Lesser Yellowlegs": {
+    "scientific": "Tringa flavipes",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Tringa"
+  },
+  "Lewis's Woodpecker": {
+    "scientific": "Melanerpes lewis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Melanerpes"
+  },
+  "Lincoln's Sparrow": {
+    "scientific": "Melospiza lincolnii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Melospiza"
+  },
+  "Little Brown Myotis": {
+    "scientific": "Myotis lucifugus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Myotis"
+  },
+  "Loggerhead Shrike": {
+    "scientific": "Lanius ludovicianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Laniidae",
+    "genus": "Lanius"
+  },
+  "Long-billed Curlew": {
+    "scientific": "Numenius americanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Numenius"
+  },
+  "Long-billed Dowitcher": {
+    "scientific": "Limnodromus scolopaceus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Limnodromus"
+  },
+  "Long-eared Owl": {
+    "scientific": "Asio otus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Asio"
+  },
+  "Long-tailed Duck": {
+    "scientific": "Clangula hyemalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Clangula"
+  },
+  "Long-tailed Jaeger": {
+    "scientific": "Stercorarius longicaudus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Stercorariidae",
+    "genus": "Stercorarius"
+  },
+  "Louisiana Waterthrush": {
+    "scientific": "Parkesia motacilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Parkesia"
+  },
+  "MacGillivray's Warbler": {
+    "scientific": "Geothlypis tolmiei",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Geothlypis"
+  },
+  "Magnolia Warbler": {
+    "scientific": "Setophaga magnolia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Mallard": {
+    "scientific": "Anas platyrhynchos",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anas"
+  },
+  "Marbled Godwit": {
+    "scientific": "Limosa fedoa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Limosa"
+  },
+  "Marbled Murrelet": {
+    "scientific": "Brachyramphus marmoratus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Brachyramphus"
+  },
+  "Marsh Wren": {
+    "scientific": "Cistothorus palustris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Cistothorus"
+  },
+  "Marsh ground cricket": {
+    "scientific": "Neoconocephalus palustris",
+    "kingdom": "Animalia",
+    "phylum": "Arthropoda",
+    "class": "Insecta",
+    "order": "Orthoptera",
+    "family": "Tettigoniidae",
+    "genus": "Neoconocephalus"
+  },
+  "Merlin": {
+    "scientific": "Falco columbarius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Falconiformes",
+    "family": "Falconidae",
+    "genus": "Falco"
+  },
+  "Mountain Bluebird": {
+    "scientific": "Sialia currucoides",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Sialia"
+  },
+  "Mountain Chickadee": {
+    "scientific": "Poecile gambeli",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Poecile"
+  },
+  "Mourning Dove": {
+    "scientific": "Zenaida macroura",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Zenaida"
+  },
+  "Mourning Warbler": {
+    "scientific": "Geothlypis philadelphia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Geothlypis"
+  },
+  "Mute Swan": {
+    "scientific": "Cygnus olor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Cygnus"
+  },
+  "Myrtle Warbler": {
+    "scientific": "Setophaga coronata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Nashville Warbler": {
+    "scientific": "Leiothlypis ruficapilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Leiothlypis"
+  },
+  "Nelson's Sparrow": {
+    "scientific": "Ammospiza nelsoni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Ammospiza"
+  },
+  "North American Porcupine": {
+    "scientific": "Erethizon dorsatum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Erethizontidae",
+    "genus": "Erethizon"
+  },
+  "North American Red Squirrel": {
+    "scientific": "Tamiasciurus hudsonicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Sciuridae",
+    "genus": "Tamiasciurus"
+  },
+  "Northern Bobwhite": {
+    "scientific": "Colinus virginianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Odontophoridae",
+    "genus": "Colinus"
+  },
+  "Northern Cardinal": {
+    "scientific": "Cardinalis cardinalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Cardinalis"
+  },
+  "Northern Flicker": {
+    "scientific": "Colaptes auratus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Colaptes"
+  },
+  "Northern Fulmar": {
+    "scientific": "Fulmarus glacialis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Procellariiformes",
+    "family": "Procellariidae",
+    "genus": "Fulmarus"
+  },
+  "Northern Gannet": {
+    "scientific": "Morus bassanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Suliformes",
+    "family": "Sulidae",
+    "genus": "Morus"
+  },
+  "Northern Goshawk": {
+    "scientific": "Accipiter gentilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Accipiter"
+  },
+  "Northern Harrier": {
+    "scientific": "Circus hudsonius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Circus"
+  },
+  "Northern Hawk Owl": {
+    "scientific": "Surnia ulula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Surnia"
+  },
+  "Northern Hawk-Owl": {
+    "scientific": "Surnia ulula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Surnia"
+  },
+  "Northern Hoary Bat": {
+    "scientific": "Lasiurus cinereus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Aeorestes"
+  },
+  "Northern Leopard Frog": {
+    "scientific": "Lithobates pipiens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "Northern Mockingbird": {
+    "scientific": "Mimus polyglottos",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Mimidae",
+    "genus": "Mimus"
+  },
+  "Northern Myotis": {
+    "scientific": "Myotis septentrionalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Myotis"
+  },
+  "Northern Parula": {
+    "scientific": "Setophaga americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Northern Pintail": {
+    "scientific": "Anas acuta",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anas"
+  },
+  "Northern Pygmy Owl": {
+    "scientific": "Glaucidium gnoma",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Glaucidium"
+  },
+  "Northern Pygmy-Owl": {
+    "scientific": "Glaucidium gnoma",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Glaucidium"
+  },
+  "Northern Raven": {
+    "scientific": "Corvus corax",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Corvus"
+  },
+  "Northern Rough-winged Swallow": {
+    "scientific": "Stelgidopteryx serripennis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Stelgidopteryx"
+  },
+  "Northern Saw-whet Owl": {
+    "scientific": "Aegolius acadicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Aegolius"
+  },
+  "Northern Shoveler": {
+    "scientific": "Spatula clypeata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Spatula"
+  },
+  "Northern Shrike": {
+    "scientific": "Lanius borealis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Laniidae",
+    "genus": "Lanius"
+  },
+  "Northern Waterthrush": {
+    "scientific": "Parkesia noveboracensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Parkesia"
+  },
+  "Northern Wheatear": {
+    "scientific": "Oenanthe oenanthe",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Muscicapidae",
+    "genus": "Oenanthe"
+  },
+  "Olive-sided Flycatcher": {
+    "scientific": "Contopus cooperi",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Contopus"
+  },
+  "Orange-crowned Warbler": {
+    "scientific": "Leiothlypis celata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Leiothlypis"
+  },
+  "Orchard Oriole": {
+    "scientific": "Icterus spurius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Icterus"
+  },
+  "Osprey": {
+    "scientific": "Pandion haliaetus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Pandionidae",
+    "genus": "Pandion"
+  },
+  "Ovenbird": {
+    "scientific": "Seiurus aurocapilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Seiurus"
+  },
+  "Pacific Chorus Frog": {
+    "scientific": "Pseudacris regilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Hylidae",
+    "genus": "Pseudacris"
+  },
+  "Pacific Loon": {
+    "scientific": "Gavia pacifica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gaviiformes",
+    "family": "Gaviidae",
+    "genus": "Gavia"
+  },
+  "Pacific Wren": {
+    "scientific": "Troglodytes pacificus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Troglodytes"
+  },
+  "Pacific-slope Flycatcher": {
+    "scientific": "Empidonax difficilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Palm Warbler": {
+    "scientific": "Setophaga palmarum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Parasitic Jaeger": {
+    "scientific": "Stercorarius parasiticus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Stercorariidae",
+    "genus": "Stercorarius"
+  },
+  "Pectoral Sandpiper": {
+    "scientific": "Calidris melanotos",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Pelagic Cormorant": {
+    "scientific": "Urile pelagicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Suliformes",
+    "family": "Phalacrocoracidae",
+    "genus": "Phalacrocorax"
+  },
+  "Peregrine Falcon": {
+    "scientific": "Falco peregrinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Falconiformes",
+    "family": "Falconidae",
+    "genus": "Falco"
+  },
+  "Philadelphia Vireo": {
+    "scientific": "Vireo philadelphicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Pickerel Frog": {
+    "scientific": "Lithobates palustris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "Pied-billed Grebe": {
+    "scientific": "Podilymbus podiceps",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Podilymbus"
+  },
+  "Pigeon Guillemot": {
+    "scientific": "Cepphus columba",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Cepphus"
+  },
+  "Pileated Woodpecker": {
+    "scientific": "Dryocopus pileatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Dryocopus"
+  },
+  "Pine Grosbeak": {
+    "scientific": "Pinicola enucleator",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Pinicola"
+  },
+  "Pine Siskin": {
+    "scientific": "Spinus pinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Spinus"
+  },
+  "Pine Warbler": {
+    "scientific": "Setophaga pinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Pink-footed Shearwater": {
+    "scientific": "Ardenna creatopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Procellariiformes",
+    "family": "Procellariidae",
+    "genus": "Puffinus"
+  },
+  "Piping Plover": {
+    "scientific": "Charadrius melodus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Charadrius"
+  },
+  "Plains Spadefoot Toad": {
+    "scientific": "Spea bombifrons",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Scaphiopodidae",
+    "genus": "Spea"
+  },
+  "Prairie Warbler": {
+    "scientific": "Setophaga discolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Prothonotary Warbler": {
+    "scientific": "Protonotaria citrea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Protonotaria"
+  },
+  "Purple Finch": {
+    "scientific": "Haemorhous purpureus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Haemorhous"
+  },
+  "Purple Martin": {
+    "scientific": "Progne subis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Progne"
+  },
+  "Pygmy Nuthatch": {
+    "scientific": "Sitta pygmaea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sittidae",
+    "genus": "Sitta"
+  },
+  "Razorbill": {
+    "scientific": "Alca torda",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Alca"
+  },
+  "Red Crossbill": {
+    "scientific": "Loxia curvirostra",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Loxia"
+  },
+  "Red Fox Sparrow": {
+    "scientific": "Passerella iliaca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Passerella"
+  },
+  "Red Knot": {
+    "scientific": "Calidris canutus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Red Phalarope": {
+    "scientific": "Phalaropus fulicarius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Phalaropus"
+  },
+  "Red-bellied Woodpecker": {
+    "scientific": "Melanerpes carolinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Melanerpes"
+  },
+  "Red-breasted Merganser": {
+    "scientific": "Mergus serrator",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Mergus"
+  },
+  "Red-breasted Nuthatch": {
+    "scientific": "Sitta canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sittidae",
+    "genus": "Sitta"
+  },
+  "Red-breasted Sapsucker": {
+    "scientific": "Sphyrapicus ruber",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Sphyrapicus"
+  },
+  "Red-eyed Vireo": {
+    "scientific": "Vireo olivaceus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Red-headed Woodpecker": {
+    "scientific": "Melanerpes erythrocephalus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Melanerpes"
+  },
+  "Red-naped Sapsucker": {
+    "scientific": "Sphyrapicus nuchalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Sphyrapicus"
+  },
+  "Red-necked Grebe": {
+    "scientific": "Podiceps grisegena",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Podiceps"
+  },
+  "Red-necked Phalarope": {
+    "scientific": "Phalaropus lobatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Phalaropus"
+  },
+  "Red-shouldered Hawk": {
+    "scientific": "Buteo lineatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Buteo"
+  },
+  "Red-tailed Hawk": {
+    "scientific": "Buteo jamaicensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Buteo"
+  },
+  "Red-throated Loon": {
+    "scientific": "Gavia stellata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gaviiformes",
+    "family": "Gaviidae",
+    "genus": "Gavia"
+  },
+  "Red-throated Pipit": {
+    "scientific": "Anthus cervinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Anthus"
+  },
+  "Red-winged Blackbird": {
+    "scientific": "Agelaius phoeniceus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Agelaius"
+  },
+  "Redhead": {
+    "scientific": "Aythya americana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Aythya"
+  },
+  "Redpoll": {
+    "scientific": "Acanthis flammea flammea/rostrata/islandica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Acanthis"
+  },
+  "Redwing": {
+    "scientific": "Turdus migratorius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Turdus"
+  },
+  "Rhinoceros Auklet": {
+    "scientific": "Cerorhinca monocerata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Cerorhinca"
+  },
+  "Riley's tree cricket": {
+    "scientific": "Oecanthus rileyi",
+    "kingdom": "Animalia",
+    "phylum": "Arthropoda",
+    "class": "Insecta",
+    "order": "Orthoptera",
+    "family": "Gryllidae",
+    "genus": "Oecanthus"
+  },
+  "Ring-billed Gull": {
+    "scientific": "Larus delawarensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Ring-necked Duck": {
+    "scientific": "Aythya collaris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Aythya"
+  },
+  "Ring-necked Pheasant": {
+    "scientific": "Phasianus colchicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Phasianus"
+  },
+  "Rock Dove": {
+    "scientific": "Columba livia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Columba"
+  },
+  "Rock Pigeon": {
+    "scientific": "Columba livia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Columbiformes",
+    "family": "Columbidae",
+    "genus": "Columba"
+  },
+  "Rock Ptarmigan": {
+    "scientific": "Lagopus muta",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Lagopus"
+  },
+  "Rock Wren": {
+    "scientific": "Salpinctes obsoletus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Salpinctes"
+  },
+  "Rose-breasted Grosbeak": {
+    "scientific": "Pheucticus ludovicianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Pheucticus"
+  },
+  "Roseate Tern": {
+    "scientific": "Sterna dougallii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Sterna"
+  },
+  "Rough-legged Hawk": {
+    "scientific": "Buteo lagopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Buteo"
+  },
+  "Ruby-crowned Kinglet": {
+    "scientific": "Corthylio calendula",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Regulidae",
+    "genus": "Regulus"
+  },
+  "Ruby-throated Hummingbird": {
+    "scientific": "Archilochus colubris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Trochilidae",
+    "genus": "Archilochus"
+  },
+  "Ruddy Duck": {
+    "scientific": "Oxyura jamaicensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Oxyura"
+  },
+  "Ruddy Turnstone": {
+    "scientific": "Arenaria interpres",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Arenaria"
+  },
+  "Ruffed Grouse": {
+    "scientific": "Bonasa umbellus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Bonasa"
+  },
+  "Rufous Hummingbird": {
+    "scientific": "Selasphorus rufus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Trochilidae",
+    "genus": "Selasphorus"
+  },
+  "Rusty Blackbird": {
+    "scientific": "Euphagus carolinus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Euphagus"
+  },
+  "Sage Thrasher": {
+    "scientific": "Oreoscoptes montanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Mimidae",
+    "genus": "Oreoscoptes"
+  },
+  "Sand Martin": {
+    "scientific": "Riparia riparia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Riparia"
+  },
+  "Sanderling": {
+    "scientific": "Calidris alba",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Sandhill Crane": {
+    "scientific": "Antigone canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Gruidae",
+    "genus": "Grus"
+  },
+  "Savannah Sparrow": {
+    "scientific": "Passerculus sandwichensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Passerculus"
+  },
+  "Say's Phoebe": {
+    "scientific": "Sayornis saya",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Sayornis"
+  },
+  "Scarlet Tanager": {
+    "scientific": "Piranga olivacea",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Piranga"
+  },
+  "Scissor-tailed Flycatcher": {
+    "scientific": "Tyrannus forficatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Tyrannus"
+  },
+  "Sedge Wren": {
+    "scientific": "Cistothorus stellaris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Cistothorus"
+  },
+  "Semipalmated Plover": {
+    "scientific": "Charadrius semipalmatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Charadriidae",
+    "genus": "Charadrius"
+  },
+  "Semipalmated Sandpiper": {
+    "scientific": "Calidris pusilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Sharp-shinned Hawk": {
+    "scientific": "Accipiter striatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Accipiter"
+  },
+  "Sharp-tailed Grouse": {
+    "scientific": "Tympanuchus phasianellus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Tympanuchus"
+  },
+  "Short-billed Dowitcher": {
+    "scientific": "Limnodromus griseus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Limnodromus"
+  },
+  "Short-billed Gull": {
+    "scientific": "Larus brachyrhynchus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Laridae",
+    "genus": "Larus"
+  },
+  "Short-eared Owl": {
+    "scientific": "Asio flammeus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Asio"
+  },
+  "Silver-haired Bat": {
+    "scientific": "Lasionycteris noctivagans",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Lasionycteris"
+  },
+  "Singing Vole": {
+    "scientific": "Microtus miurus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Cricetidae",
+    "genus": "Microtus"
+  },
+  "Slate-colored Fox Sparrow": {
+    "scientific": "Passerella iliaca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Passerella"
+  },
+  "Smith's Longspur": {
+    "scientific": "Calcarius pictus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Calcariidae",
+    "genus": "Calcarius"
+  },
+  "Snow Bunting": {
+    "scientific": "Plectrophenax nivalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Calcariidae",
+    "genus": "Plectrophenax"
+  },
+  "Snow Goose": {
+    "scientific": "Anser caerulescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Anser"
+  },
+  "Solitary Sandpiper": {
+    "scientific": "Tringa solitaria",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Tringa"
+  },
+  "Song Sparrow": {
+    "scientific": "Melospiza melodia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Melospiza"
+  },
+  "Sooty Fox Sparrow": {
+    "scientific": "Passerella iliaca",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Passerella"
+  },
+  "Sooty Grouse": {
+    "scientific": "Dendragapus fuliginosus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Dendragapus"
+  },
+  "Sora": {
+    "scientific": "Porzana carolina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Porzana"
+  },
+  "Spotted Owl": {
+    "scientific": "Strix occidentalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Strix"
+  },
+  "Spotted Sandpiper": {
+    "scientific": "Actitis macularius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Actitis"
+  },
+  "Spotted Towhee": {
+    "scientific": "Pipilo maculatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Pipilo"
+  },
+  "Sprague's Pipit": {
+    "scientific": "Anthus spragueii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Motacillidae",
+    "genus": "Anthus"
+  },
+  "Spring Peeper": {
+    "scientific": "Pseudacris crucifer",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Hylidae",
+    "genus": "Pseudacris"
+  },
+  "Spruce Grouse": {
+    "scientific": "Canachites canadensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Canachites"
+  },
+  "Steindachner's Shieldback": {
+    "scientific": "Neduba steindachneri",
+    "kingdom": "Animalia",
+    "phylum": "Arthropoda",
+    "class": "Insecta",
+    "order": "Orthoptera",
+    "family": "Tettigoniidae",
+    "genus": "Neduba"
+  },
+  "Steller's Jay": {
+    "scientific": "Cyanocitta stelleri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Corvidae",
+    "genus": "Cyanocitta"
+  },
+  "Steller's Sea Eagle": {
+    "scientific": "Haliaeetus pelagicus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Haliaeetus"
+  },
+  "Stilt Sandpiper": {
+    "scientific": "Calidris himantopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Summer Tanager": {
+    "scientific": "Piranga rubra",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Piranga"
+  },
+  "Surf Scoter": {
+    "scientific": "Melanitta perspicillata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Melanitta"
+  },
+  "Surfbird": {
+    "scientific": "Calidris virgata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Swainson's Hawk": {
+    "scientific": "Buteo swainsoni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Buteo"
+  },
+  "Swainson's Thrush": {
+    "scientific": "Catharus ustulatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Swamp Sparrow": {
+    "scientific": "Melospiza georgiana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Melospiza"
+  },
+  "Taiga Vole": {
+    "scientific": "Microtus gregalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Rodentia",
+    "family": "Cricetidae",
+    "genus": "Microtus"
+  },
+  "Tennessee Warbler": {
+    "scientific": "Leiothlypis peregrina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Leiothlypis"
+  },
+  "Thick-billed Longspur": {
+    "scientific": "Rhynchophanes mccownii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Calcariidae",
+    "genus": "Rhynchophanes"
+  },
+  "Townsend's Solitaire": {
+    "scientific": "Myadestes townsendi",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Myadestes"
+  },
+  "Townsend's Warbler": {
+    "scientific": "Setophaga townsendi",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Tree Swallow": {
+    "scientific": "Tachycineta bicolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Tachycineta"
+  },
+  "Tricolored Bat": {
+    "scientific": "Perimyotis subflavus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Chiroptera",
+    "family": "Vespertilionidae",
+    "genus": "Perimyotis"
+  },
+  "Trumpeter Swan": {
+    "scientific": "Cygnus buccinator",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Cygnus"
+  },
+  "Tufted Puffin": {
+    "scientific": "Fratercula cirrhata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Alcidae",
+    "genus": "Fratercula"
+  },
+  "Tufted Titmouse": {
+    "scientific": "Baeolophus bicolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Paridae",
+    "genus": "Baeolophus"
+  },
+  "Tundra Swan": {
+    "scientific": "Cygnus columbianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Cygnus"
+  },
+  "Two-barred Crossbill": {
+    "scientific": "Loxia leucoptera",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Loxia"
+  },
+  "Upland Sandpiper": {
+    "scientific": "Bartramia longicauda",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Bartramia"
+  },
+  "Varied Thrush": {
+    "scientific": "Ixoreus naevius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Ixoreus"
+  },
+  "Vaux's Swift": {
+    "scientific": "Chaetura vauxi",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Apodidae",
+    "genus": "Chaetura"
+  },
+  "Veery": {
+    "scientific": "Catharus fuscescens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Catharus"
+  },
+  "Vesper Sparrow": {
+    "scientific": "Pooecetes gramineus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Pooecetes"
+  },
+  "Violet-green Swallow": {
+    "scientific": "Tachycineta thalassina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Hirundinidae",
+    "genus": "Tachycineta"
+  },
+  "Virginia Rail": {
+    "scientific": "Rallus limicola",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Rallus"
+  },
+  "Wandering Tattler": {
+    "scientific": "Tringa incana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Tringa"
+  },
+  "Warbling Vireo": {
+    "scientific": "Vireo gilvus/swainsoni",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Western Bluebird": {
+    "scientific": "Sialia mexicana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Sialia"
+  },
+  "Western Flycatcher": {
+    "scientific": "Empidonax difficilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Western Grebe": {
+    "scientific": "Aechmophorus occidentalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Podicipediformes",
+    "family": "Podicipedidae",
+    "genus": "Aechmophorus"
+  },
+  "Western Kingbird": {
+    "scientific": "Tyrannus verticalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Tyrannus"
+  },
+  "Western Meadowlark": {
+    "scientific": "Sturnella neglecta",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Sturnella"
+  },
+  "Western Osprey": {
+    "scientific": "Pandion haliaetus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Pandionidae",
+    "genus": "Pandion"
+  },
+  "Western Sandpiper": {
+    "scientific": "Calidris mauri",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "Western Screech Owl": {
+    "scientific": "Megascops kennicottii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Megascops"
+  },
+  "Western Screech-Owl": {
+    "scientific": "Megascops kennicottii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Strigiformes",
+    "family": "Strigidae",
+    "genus": "Megascops"
+  },
+  "Western Tanager": {
+    "scientific": "Piranga ludoviciana",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Cardinalidae",
+    "genus": "Piranga"
+  },
+  "Western Toad": {
+    "scientific": "Anaxyrus boreas",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Bufonidae",
+    "genus": "Anaxyrus"
+  },
+  "Western Wood Pewee": {
+    "scientific": "Contopus sordidulus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Contopus"
+  },
+  "Western Wood-Pewee": {
+    "scientific": "Contopus sordidulus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Contopus"
+  },
+  "Whimbrel": {
+    "scientific": "Numenius hudsonicus/phaeopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Numenius"
+  },
+  "White-breasted Nuthatch": {
+    "scientific": "Sitta carolinensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Sittidae",
+    "genus": "Sitta"
+  },
+  "White-crowned Sparrow": {
+    "scientific": "Zonotrichia leucophrys",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Zonotrichia"
+  },
+  "White-eyed Vireo": {
+    "scientific": "Vireo griseus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "White-headed Woodpecker": {
+    "scientific": "Dryobates albolarvatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Leuconotopicus"
+  },
+  "White-rumped Sandpiper": {
+    "scientific": "Calidris fuscicollis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Calidris"
+  },
+  "White-tailed Deer": {
+    "scientific": "Odocoileus virginianus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Mammalia",
+    "order": "Artiodactyla",
+    "family": "Cervidae",
+    "genus": "Odocoileus"
+  },
+  "White-tailed Ptarmigan": {
+    "scientific": "Lagopus leucura",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Lagopus"
+  },
+  "White-throated Sparrow": {
+    "scientific": "Zonotrichia albicollis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Passerellidae",
+    "genus": "Zonotrichia"
+  },
+  "White-throated Swift": {
+    "scientific": "Aeronautes saxatalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Apodiformes",
+    "family": "Apodidae",
+    "genus": "Aeronautes"
+  },
+  "White-winged Crossbill": {
+    "scientific": "Loxia leucoptera",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Fringillidae",
+    "genus": "Loxia"
+  },
+  "White-winged Scoter": {
+    "scientific": "Melanitta deglandi",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Melanitta"
+  },
+  "Wild Turkey": {
+    "scientific": "Meleagris gallopavo",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Meleagris"
+  },
+  "Willet": {
+    "scientific": "Tringa semipalmata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Tringa"
+  },
+  "Williamson's Sapsucker": {
+    "scientific": "Sphyrapicus thyroideus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Sphyrapicus"
+  },
+  "Willow Flycatcher": {
+    "scientific": "Empidonax traillii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Willow Ptarmigan": {
+    "scientific": "Lagopus lagopus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Galliformes",
+    "family": "Phasianidae",
+    "genus": "Lagopus"
+  },
+  "Wilson's Phalarope": {
+    "scientific": "Phalaropus tricolor",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Phalaropus"
+  },
+  "Wilson's Snipe": {
+    "scientific": "Gallinago delicata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Charadriiformes",
+    "family": "Scolopacidae",
+    "genus": "Gallinago"
+  },
+  "Wilson's Warbler": {
+    "scientific": "Cardellina pusilla",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Cardellina"
+  },
+  "Winter Wren": {
+    "scientific": "Troglodytes hiemalis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Troglodytidae",
+    "genus": "Troglodytes"
+  },
+  "Wood Duck": {
+    "scientific": "Aix sponsa",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Anseriformes",
+    "family": "Anatidae",
+    "genus": "Aix"
+  },
+  "Wood Frog": {
+    "scientific": "Lithobates sylvaticus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Amphibia",
+    "order": "Anura",
+    "family": "Ranidae",
+    "genus": "Lithobates"
+  },
+  "Wood Thrush": {
+    "scientific": "Hylocichla mustelina",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Turdidae",
+    "genus": "Hylocichla"
+  },
+  "Worm-eating Warbler": {
+    "scientific": "Helmitheros vermivorum",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Helmitheros"
+  },
+  "Yellow Rail": {
+    "scientific": "Coturnicops noveboracensis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Gruiformes",
+    "family": "Rallidae",
+    "genus": "Coturnicops"
+  },
+  "Yellow Warbler": {
+    "scientific": "Setophaga aestiva/petechia",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Yellow-bellied Flycatcher": {
+    "scientific": "Empidonax flaviventris",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Tyrannidae",
+    "genus": "Empidonax"
+  },
+  "Yellow-bellied Sapsucker": {
+    "scientific": "Sphyrapicus varius",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Piciformes",
+    "family": "Picidae",
+    "genus": "Sphyrapicus"
+  },
+  "Yellow-billed Cuckoo": {
+    "scientific": "Coccyzus americanus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Cuculiformes",
+    "family": "Cuculidae",
+    "genus": "Coccyzus"
+  },
+  "Yellow-breasted Chat": {
+    "scientific": "Icteria virens",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Icteria"
+  },
+  "Yellow-browed Warbler": {
+    "scientific": "Phylloscopus inornatus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Phylloscopidae",
+    "genus": "Phylloscopus"
+  },
+  "Yellow-headed Blackbird": {
+    "scientific": "Xanthocephalus xanthocephalus",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Icteridae",
+    "genus": "Xanthocephalus"
+  },
+  "Yellow-rumped Warbler": {
+    "scientific": "Setophaga coronata",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "Yellow-throated Vireo": {
+    "scientific": "Vireo flavifrons",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Vireonidae",
+    "genus": "Vireo"
+  },
+  "Yellow-throated Warbler": {
+    "scientific": "Setophaga dominica",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Passeriformes",
+    "family": "Parulidae",
+    "genus": "Setophaga"
+  },
+  "American Goshawk": {
+    "scientific": "Accipiter gentilis",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Accipiter"
+  },
+  "Cooper's Hawk": {
+    "scientific": "Accipiter cooperii",
+    "kingdom": "Animalia",
+    "phylum": "Chordata",
+    "class": "Aves",
+    "order": "Accipitriformes",
+    "family": "Accipitridae",
+    "genus": "Accipiter"
+  }
+}
