@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { getResultById } from "@/api/mock";
+import { getResultById } from "@/api/backend";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { ResultCard } from "@/components/ResultCard";
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { classifyUpload, searchDataset, searchSimilarToUpload } from "@/api/mock";
+import { classifyUpload, searchDataset, searchSimilarToUpload } from "@/api/backend";
 import type { ClassificationHit, SearchResult } from "@/api/types";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { ResultCard } from "@/components/ResultCard";
@@ -20,6 +20,7 @@ export function QueryPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [classifyHits, setClassifyHits] = useState<ClassificationHit[] | null>(null);
   const [classifyLoading, setClassifyLoading] = useState(false);
   const [specCanvas, setSpecCanvas] = useState<HTMLCanvasElement | null>(null);
@@ -33,9 +34,14 @@ export function QueryPage() {
 
   const runDatasetSearch = async () => {
     setLoading(true);
+    setError(null);
     try {
       const r = await searchDataset(query, vocabMode);
       setResults(r);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Search failed.";
+      setResults([]);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -44,9 +50,14 @@ export function QueryPage() {
   const runSimilarSearch = async () => {
     if (!uploadedFile) return;
     setLoading(true);
+    setError(null);
     try {
       const r = await searchSimilarToUpload(uploadedFile);
       setResults(r);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Similarity search failed.";
+      setResults([]);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -55,9 +66,14 @@ export function QueryPage() {
   const runClassify = async () => {
     if (!uploadedFile) return;
     setClassifyLoading(true);
+    setError(null);
     try {
       const h = await classifyUpload(uploadedFile);
       setClassifyHits(h);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Classification failed.";
+      setClassifyHits(null);
+      setError(message);
     } finally {
       setClassifyLoading(false);
     }
@@ -115,6 +131,7 @@ export function QueryPage() {
             {loading ? "Searching…" : "Search dataset"}
           </button>
         </div>
+        {error ? <p className="muted" role="alert">{error}</p> : null}
       </section>
 
       <section className="panel">

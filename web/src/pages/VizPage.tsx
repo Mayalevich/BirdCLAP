@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getResultById } from "@/api/mock";
+import { getResultById } from "@/api/backend";
 import { useAppPreferences } from "@/context/AppPreferences";
 
 const BirdSoundEmbeddingViz = lazy(async () => {

@@ -1,6 +1,8 @@
 .venv
 .env
 .env*
+!.env.example
+!web/.env.example
 .venv*
 scripts/data/
 checkpoints/
