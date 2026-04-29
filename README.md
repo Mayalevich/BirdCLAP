@@ -57,12 +57,29 @@ python scripts/build_taxonomy_db.py
 Output: `data/species_taxonomy.json`
 
 ### Step 3 — Generate rich text descriptions
-Uses OpenAI GPT to generate 4 varied acoustic descriptions per (species, vocalization type) combo,
-grounded in the scraped species text (RAG pipeline). Requires `OPENAI_API_KEY`.
+Uses an LLM to generate **4** varied acoustic descriptions per (species, vocalization type) combo,
+grounded in the scraped species text (RAG pipeline).
+
+**OpenAI (default)** — set `OPENAI_API_KEY`.
 ```bash
 export OPENAI_API_KEY=sk-...
 python scripts/generate_clap_descriptions.py
 ```
+
+**Google Gemini** — same prompts/output; set `GEMINI_API_KEY` or `GOOGLE_API_KEY` and install the client.  
+Free-tier RPM is tight: use a **long** `--delay` (defaults to **5 s** for Gemini; try **10–20** if you still see backoff loops).
+
+```bash
+pip install google-generativeai
+export GEMINI_API_KEY=...
+python scripts/generate_clap_descriptions.py --provider gemini --gemini-model gemini-2.0-flash
+# If rate limits persist:
+python scripts/generate_clap_descriptions.py --provider gemini --delay 12
+```
+
+To generate only for combos that still have few label variants (typically taxonomy-only pools, ~27% of combos), add:
+`--taxonomy-gap-only --labels data/clap_all_labels.json`.
+
 Output: `data/clap_descriptions.json` — 4 descriptions per (species, type) combo
 
 ### Step 4 — Build label variants
