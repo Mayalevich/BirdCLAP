@@ -44,6 +44,11 @@ Tips
 - If OOM, lower --batch-size to 4 and raise --accum proportionally.
 - Freeze the text tower early in training:
     python scripts/train_clap.py --freeze-text-epochs 3
+- Use the full label strings from build_clap_labels.py (taxonomy templates plus rich
+  descriptions where present). Training or warm-starting after runs that dropped rich/taxonomy
+  text in favour of vocal-type-only cues badly damages the text encoder; see
+  TRAINING_AUDIT_8th_run.md. Prefer warm-starting from a checkpoint trained on full labels
+  (e.g. run 6 best.pt), not from damaged runs.
 """
 
 from __future__ import annotations

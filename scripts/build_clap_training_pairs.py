@@ -207,7 +207,7 @@ def main():
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    labels = json.loads(Path(args.labels).read_text())
+    labels = json.loads(Path(args.labels).read_text(encoding="utf-8"))
     print(f"Loaded {len(labels)} label keys from {args.labels}")
 
     tax_db: dict = {}
@@ -221,12 +221,23 @@ def main():
     # Deterministic holdout species selection (sorted alphabetically → every Nth)
     holdout_species: set[str] = set()
     if args.holdout_species_frac > 0:
-        all_species = sorted({
-            str(row[next((c for c in ("common_name","species","name") if c in pd.read_csv(p).columns), None)]).strip()
-            for p in args.metadata if Path(p).exists()
-            for _, row in pd.read_csv(p).iterrows()
-            if tax_db.get(str(row.get("common_name","")).strip(), {}).get("class") == "Aves"
-        })
+        all_species_set: set[str] = set()
+        for meta_path in args.metadata:
+            mp = Path(meta_path)
+            if not mp.exists():
+                continue
+            df_h = pd.read_csv(mp)
+            name_col = next(
+                (c for c in ("common_name", "species", "name") if c in df_h.columns),
+                None,
+            )
+            if not name_col:
+                continue
+            for _, row in df_h.iterrows():
+                name = str(row[name_col]).strip()
+                if tax_db.get(name, {}).get("class") == "Aves":
+                    all_species_set.add(name)
+        all_species = sorted(all_species_set)
         step = max(1, round(1.0 / args.holdout_species_frac))
         holdout_species = set(all_species[::step])
         print(f"Holdout species : {len(holdout_species)} / {len(all_species)} "
@@ -256,10 +267,10 @@ def main():
     train_path = Path(args.train_out)
     val_path   = Path(args.val_out)
     train_path.parent.mkdir(parents=True, exist_ok=True)
-    train_path.write_text(json.dumps(train, indent=2, ensure_ascii=False))
-    val_path.write_text(json.dumps(val,   indent=2, ensure_ascii=False))
+    train_path.write_text(json.dumps(train, indent=2, ensure_ascii=False), encoding="utf-8")
+    val_path.write_text(json.dumps(val, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    print(f"\n{'─'*60}")
+    print(f"\n{'-'*60}")
     print(f"Done.")
     print(f"  Train : {len(train)} pairs ({n_train_clips} clips × avg "
           f"{len(train)/n_train_clips:.1f} variants) → {train_path}")
@@ -293,7 +304,7 @@ def main():
                     holdout_pairs.append({"audio": fpath, "text": text, "combo": key})
         holdout_path = Path(args.holdout_out)
         holdout_path.parent.mkdir(parents=True, exist_ok=True)
-        holdout_path.write_text(json.dumps(holdout_pairs, indent=2, ensure_ascii=False))
+        holdout_path.write_text(json.dumps(holdout_pairs, indent=2, ensure_ascii=False), encoding="utf-8")
         n_holdout_clips = len({p["audio"] for p in holdout_pairs})
         n_holdout_combos = len(holdout_clips)
         print(f"  Holdout: {len(holdout_pairs)} pairs ({n_holdout_clips} clips, "
