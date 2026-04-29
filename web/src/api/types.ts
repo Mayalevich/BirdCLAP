@@ -20,4 +20,5 @@ export interface SearchResult {
   similarity?: number;
   /** Placeholder image (deterministic mock). */
   imageUrl: string;
+  audioUrl?: string;
 }
