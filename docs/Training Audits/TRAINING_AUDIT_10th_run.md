@@ -1,7 +1,7 @@
 # Training Audit — Run 10 (finetune10)
 
-**Status:** **Ready to train** after you run the **pre-train rebuild** steps below (one-time if `clap_descriptions.json` changed since last `build_clap_*`).  
-**Last updated:** 2026-04-29 (evening)  
+**Status:** COMPLETE — training + evaluation complete (**2026-04-30**).  
+**Last updated:** 2026-04-30  
 **Goal:** Push offline `all_variants` `R@1` above **10%** (step toward **20%**).
 
 ---
@@ -139,7 +139,19 @@ python scripts/evaluate_clap.py `
   --figures-dir results/figures_finetune10
 ```
 
-Repeat with **`best.pt`**; keep the checkpoint with higher **`all_variants` R@1**.
+Run status:
+- Completed. Output JSON present at `results/eval_results_finetune10.json`.
+- Figure outputs present at `results/figures_finetune10/`:
+  - `strategy_comparison.pdf`
+  - `class_breakdown_finetuned.pdf`
+  - `class_breakdown_finetuned_zeroshot.pdf`
+  - `hardest_easiest_finetuned.pdf`
+  - `hardest_easiest_finetuned_zeroshot.pdf`
+  - `rank_cdf_finetuned.pdf`
+  - `rank_cdf_finetuned_zeroshot.pdf`
+
+Note:
+- `best.pt` vs `best_r1.pt` should still be compared in future runs, but this audit records the completed evaluation using `best_r1.pt`.
 
 ### Target metrics (offline)
 
@@ -150,24 +162,68 @@ Repeat with **`best.pt`**; keep the checkpoint with higher **`all_variants` R@1*
 
 ---
 
-## 6. Epoch table *(fill after run)*
+## 6. Epoch table *(completed)*
 
 | Epoch | train_loss | val_loss | R@1 | Time | Notes |
 |------:|-----------:|---------:|----:|-----:|-------|
-| — | — | — | — | — | |
+| 00 | 2.3345 | 1.5751 | 0.2012 | 1120s | |
+| 01 | 2.1524 | 1.4302 | 0.2207 | 1352s | |
+| 02 | 2.0695 | 1.3878 | 0.2393 | 1242s | |
+| 03 | 2.0226 | 1.3700 | 0.2588 | 1197s | |
+| 04 | 1.9785 | 1.3446 | 0.2549 | 1199s | |
+| 05 | 1.9464 | 1.3329 | 0.2803 | 1196s | |
+| 06 | 1.9242 | 1.3285 | 0.2520 | 1198s | |
+| 07 | 1.9119 | 1.3136 | 0.2549 | 1198s | |
+| 08 | 1.8988 | 1.3070 | 0.2939 | 1198s | |
+| 09 | 1.8824 | 1.3160 | 0.2627 | 1196s | |
+| 10 | 1.8745 | 1.3018 | 0.2764 | 1200s | |
+| 11 | 1.8737 | 1.2961 | 0.2725 | 1197s | best val loss |
+| 12 | 1.8648 | 1.2975 | 0.2881 | 1199s | |
+| 13 | 1.8654 | 1.3007 | 0.3018 | 1199s | best train R@1 |
+| 14 | 1.8684 | 1.2998 | 0.2715 | 1197s | |
 
-**Best val loss:** `checkpoints/finetune10/best.pt`  
-**Best training R@1:** `checkpoints/finetune10/best_r1.pt`
+**Best val loss:** `checkpoints/finetune10/best.pt` (1.2961)  
+**Best training R@1:** `checkpoints/finetune10/best_r1.pt` (epoch 13)
 
 ---
 
-## 7. If Run 10 still regresses
+## 7. Post-run analysis and next actions
 
-1. Compare **`best_r1.pt`** vs **`best.pt`** on eval.  
-2. More epochs / adjust `--delay` during description gen / full precompute.  
-3. Rich-description coverage for remaining weak combos (taxonomy-only).  
-4. Escalation: fresh **`laion/clap-htsat-fused`** init with same flags (longer horizon).
+### Evaluation summary (from `results/eval_results_finetune10.json`)
+
+Validation retrieval:
+
+| Strategy | mAP | R@1 | R@5 | R@10 | Median first rank |
+|----------|----:|----:|----:|-----:|------------------:|
+| name | 0.223 | 0.088 | 0.269 | 0.373 | 7 |
+| rich_holdout | 0.210 | 0.076 | 0.250 | 0.350 | 8 |
+| **all_variants** | **0.227** | **0.084** | **0.278** | **0.390** | **6** |
+
+Zero-shot holdout:
+
+| Strategy | mAP | R@1 | R@5 | R@10 | Median first rank |
+|----------|----:|----:|----:|-----:|------------------:|
+| name | 0.119 | 0.0130 | 0.0458 | 0.0806 | 8 |
+| **all_variants** | **0.129** | **0.0115** | **0.0532** | **0.0906** | **8** |
+
+### What worked
+
+1. Training converged stably across all 15 epochs; no crash after conservative dataloader settings.
+2. Warm-start from Run 6 behaved correctly (early loss in healthy range, no collapse).
+3. Full eval figure pack for finetuned + zeroshot was generated in `results/figures_finetune10/`.
+
+### What did not
+
+1. Primary target was missed: `all_variants` R@1 reached ~8.4%, below 10% target and below Run 6 benchmark.
+2. Gains were stronger in rank-depth metrics (`R@10`) than strict top-1, indicating separability bottleneck for confusable classes.
+3. Zero-shot remained weak in absolute terms.
+
+### Action items (carried into Run 11+)
+
+1. Improve low-specificity labels before training (targeted rewrite list).
+2. Keep stable settings (`--no-loss-weights`, softer hard-neg pressure) and add ramping.
+3. Continue full-coverage eval generation each run; compare both `best.pt` and `best_r1.pt`.
 
 ---
 
-*This file is the single place to append Run 10 notes, eval numbers, and follow-ups.*
+*Run 10 is completed; follow-up experiments proceeded in Run 11.*
