@@ -96,6 +96,10 @@ Rules:
 - Vary vocabulary, sentence structure, and emphasis across descriptions.
 - Include: species name, vocalization type, acoustic qualities (pitch/rhythm/timbre),
   and behavioral context where available.
+- Avoid repetitive lead-ins (e.g., "Listen for", "Hear", "You might hear") and avoid
+  repeating the same clause structure across the four outputs.
+- At least 2 of the 4 descriptions should start directly with species/vocalization
+  context or an acoustic event, not an instruction to the listener.
 - Do not use Latin names. Do not mention recording quality or equipment."""
 
 USER_TEMPLATE = """Species: {common_name}

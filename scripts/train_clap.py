@@ -179,6 +179,7 @@ class ClapPairDataset(Dataset):
         verbose: bool = True,
         augment: bool = False,
         labels_path: Path | None = None,
+        rich_text_prob: float = 0.0,
     ) -> None:
         raw: list[dict[str, str]] = json.loads(
             pairs_path.read_text(encoding="utf-8")
@@ -188,6 +189,7 @@ class ClapPairDataset(Dataset):
         self.clip_s  = clip_s
         self.root    = audio_root
         self.augment = augment
+        self.rich_text_prob = max(0.0, min(1.0, float(rich_text_prob)))
         # Full label pool per combo for text augmentation (random pick each step)
         self.labels: dict[str, list[str]] = (
             json.loads(labels_path.read_text(encoding="utf-8"))
@@ -230,7 +232,7 @@ class ClapPairDataset(Dataset):
         combo = pair.get("combo", "")
         text  = pair["text"]
         if self.augment and combo and combo in self.labels:
-            text = random.choice(self.labels[combo])
+            text = _sample_label_variant(self.labels[combo], self.rich_text_prob)
 
         return {
             "audio":      audio,
@@ -287,12 +289,14 @@ class ClapPrecomputedDataset(Dataset):
         verbose: bool = True,
         augment: bool = False,
         labels_path: Path | None = None,
+        rich_text_prob: float = 0.0,
     ) -> None:
         raw: list[dict[str, str]] = json.loads(
             pairs_path.read_text(encoding="utf-8")
         )
         self.root    = audio_root
         self.augment = augment
+        self.rich_text_prob = max(0.0, min(1.0, float(rich_text_prob)))
         self.labels: dict[str, list[str]] = (
             json.loads(labels_path.read_text(encoding="utf-8"))
             if labels_path and labels_path.exists() else {}
@@ -328,7 +332,7 @@ class ClapPrecomputedDataset(Dataset):
         combo = pair.get("combo", "")
         text  = pair["text"]
         if self.augment and combo and combo in self.labels:
-            text = random.choice(self.labels[combo])
+            text = _sample_label_variant(self.labels[combo], self.rich_text_prob)
 
         return {
             # keep the batch dim (1, …) — collate_precomputed_fn cats along dim 0
@@ -762,6 +766,30 @@ def apply_mixup(
     return features
 
 
+def _looks_rich_label(text: str) -> bool:
+    """Heuristic: rich labels are sentence-like, not taxonomy/template strings."""
+    t = text.strip()
+    if not t:
+        return False
+    if " > " in t:
+        return False
+    return len(t.split()) >= 12
+
+
+def _sample_label_variant(labels: list[str], rich_text_prob: float) -> str:
+    """Sample text variant, optionally biasing toward richer sentence labels."""
+    valid = [s for s in labels if isinstance(s, str) and s.strip()]
+    if not valid:
+        return ""
+    if rich_text_prob <= 0.0:
+        return random.choice(valid)
+    rich = [s for s in valid if _looks_rich_label(s)]
+    other = [s for s in valid if s not in rich]
+    if rich and other:
+        return random.choice(rich if random.random() < rich_text_prob else other)
+    return random.choice(valid)
+
+
 # ── training loop ──────────────────────────────────────────────────────────────
 
 def train_one_epoch(
@@ -1080,6 +1108,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "Very high values can destabilise training; try 1.5 if R@1 regresses.",
     )
     ap.add_argument(
+        "--hard-neg-ramp-epochs", type=int, default=2,
+        help="Linearly ramp hard-neg boost from 1.0 to --hard-neg-boost over this many "
+             "epochs (default 2). Set 0 to disable ramping.",
+    )
+    ap.add_argument(
         "--label-smoothing", type=float, default=0.0,
         help="Blend the per-row soft targets with a uniform distribution to reduce "
              "overconfidence (default 0.0 = off; try 0.1 for extra regularisation).",
@@ -1089,6 +1122,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Disable combo inverse-frequency weighting inside the contrastive loss. "
              "The WeightedRandomSampler still balances sampling — this flag just stops "
              "the double-reweighting effect (sampler + loss both active by default).",
+    )
+    ap.add_argument(
+        "--rich-text-prob", type=float, default=0.75,
+        help="When text augmentation is on, probability of sampling a richer sentence-like "
+             "label variant instead of short taxonomy/template labels (default 0.75). "
+             "Set 0 to keep uniform label sampling.",
     )
     return ap.parse_args(argv)
 
@@ -1157,8 +1196,10 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         f"| Val pairs | {n_val:,} |",
         f"| Hard negatives | {'enabled (same-genus)' if Path(args.taxonomy).exists() else 'disabled (taxonomy not found)'} |",
         f"| Hard neg boost | {args.hard_neg_boost} |",
+        f"| Hard neg ramp epochs | {args.hard_neg_ramp_epochs} |",
         f"| Label smoothing | {args.label_smoothing} |",
         f"| Loss combo weights | {'disabled (--no-loss-weights)' if args.no_loss_weights else 'enabled (inverse-frequency)'} |",
+        f"| Rich text sampling prob | {args.rich_text_prob} |",
         f"| Seed | {args.seed} |",
         "",
         "---",
@@ -1279,6 +1320,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Hard-neg boost: {args.hard_neg_boost}  |  "
           f"label smoothing: {args.label_smoothing}  |  "
           f"loss weights: {'OFF (--no-loss-weights)' if args.no_loss_weights else 'ON'}")
+    print(f"Hard-neg ramp epochs: {args.hard_neg_ramp_epochs}  |  "
+          f"rich-text prob: {args.rich_text_prob}")
 
     # ── processor + model ─────────────────────────────────────────────────────
     print("\nLoading processor and model weights ...")
@@ -1322,13 +1365,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if use_precomputed:
         train_ds = ClapPrecomputedDataset(Path(args.train_pairs), audio_root,
-                                          augment=do_augment, labels_path=labels_path)
+                                          augment=do_augment, labels_path=labels_path,
+                                          rich_text_prob=args.rich_text_prob)
         val_ds   = ClapPrecomputedDataset(Path(args.val_pairs),   audio_root,
                                           augment=False)
         _collate = partial(collate_precomputed_fn, tokenizer=processor.tokenizer)
     else:
         train_ds = ClapPairDataset(Path(args.train_pairs), audio_root, clip_s=args.clip_s,
-                                   augment=do_augment, labels_path=labels_path)
+                                   augment=do_augment, labels_path=labels_path,
+                                   rich_text_prob=args.rich_text_prob)
         val_ds   = ClapPairDataset(Path(args.val_pairs),   audio_root, clip_s=args.clip_s,
                                    augment=False)
         _collate = partial(collate_fn, processor=processor, sr=TARGET_SR)
@@ -1544,16 +1589,23 @@ def main(argv: list[str] | None = None) -> int:
             elif not freeze_ls and epoch == args.freeze_logscale_epochs:
                 print(f"Epoch {epoch}: logit_scale unfrozen.")
 
+        effective_hard_neg_boost = args.hard_neg_boost
+        if args.hard_neg_ramp_epochs > 0:
+            frac = min(1.0, (epoch + 1) / max(1, args.hard_neg_ramp_epochs))
+            effective_hard_neg_boost = 1.0 + (args.hard_neg_boost - 1.0) * frac
+            if epoch == 0 or epoch < args.hard_neg_ramp_epochs:
+                print(f"Epoch {epoch:02d}: hard-neg boost ramp -> {effective_hard_neg_boost:.3f}")
+
         train_loss = train_one_epoch(
             model, train_loader, optimizer, scaler, scheduler,
             device, args.accum, epoch, use_amp, loss_combo_weights, combo_hard_negs,
             mixup_alpha=args.mixup_alpha,
-            hard_neg_boost=args.hard_neg_boost,
+            hard_neg_boost=effective_hard_neg_boost,
             label_smoothing=args.label_smoothing,
         )
         val_loss = validate(model, val_loader, device, use_amp,
                             loss_combo_weights, combo_hard_negs,
-                            hard_neg_boost=args.hard_neg_boost,
+                            hard_neg_boost=effective_hard_neg_boost,
                             label_smoothing=args.label_smoothing)
         r1       = recall_at_1(model, val_loader, processor, device)
 

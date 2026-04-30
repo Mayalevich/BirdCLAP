@@ -1,0 +1,802 @@
+[
+  {
+    "key": "American Redstart||flight call",
+    "score": 2.179553638025995
+  },
+  {
+    "key": "American Redstart||alarm call",
+    "score": 2.1798952211616065
+  },
+  {
+    "key": "American Yellow Warbler||flight call",
+    "score": 2.1896661215483655
+  },
+  {
+    "key": "Song Sparrow||flight call",
+    "score": 2.1967244340959766
+  },
+  {
+    "key": "Red-necked Phalarope||flight call",
+    "score": 2.2000109958133125
+  },
+  {
+    "key": "American Redstart||chip",
+    "score": 2.2317170237085078
+  },
+  {
+    "key": "Willet||gull-like call in flight",
+    "score": 2.2416435281087583
+  },
+  {
+    "key": "Short-billed Gull||long call",
+    "score": 2.263650347453554
+  },
+  {
+    "key": "Song Sparrow||short takking calls",
+    "score": 2.2670454518698864
+  },
+  {
+    "key": "Prairie Warbler||flight call",
+    "score": 2.2713661396966813
+  },
+  {
+    "key": "American Robin||flight call",
+    "score": 2.2736329364757877
+  },
+  {
+    "key": "White-crowned Sparrow||flight call",
+    "score": 2.273931902463088
+  },
+  {
+    "key": "Least Sandpiper||song",
+    "score": 2.279944356594948
+  },
+  {
+    "key": "Red-necked Phalarope||prek",
+    "score": 2.280025212895871
+  },
+  {
+    "key": "White-crowned Sparrow||alarm/contact calls",
+    "score": 2.28992741753905
+  },
+  {
+    "key": "Pine Warbler||flight call",
+    "score": 2.29303403374481
+  },
+  {
+    "key": "Song Sparrow||nocturnal flight call",
+    "score": 2.2941402417338694
+  },
+  {
+    "key": "American Redstart||call",
+    "score": 2.294904933040854
+  },
+  {
+    "key": "Common Tern||flight call",
+    "score": 2.3057995398948585
+  },
+  {
+    "key": "Northern Wheatear||buzz call",
+    "score": 2.308067444136743
+  },
+  {
+    "key": "Song Sparrow||contact calls",
+    "score": 2.310605310697236
+  },
+  {
+    "key": "American Yellow Warbler||flight calls and contact calls",
+    "score": 2.3106131460835013
+  },
+  {
+    "key": "MacGillivray's Warbler||flight call",
+    "score": 2.3206408346083256
+  },
+  {
+    "key": "White-crowned Sparrow||alarm call",
+    "score": 2.3417257125757907
+  },
+  {
+    "key": "Spotted Sandpiper||flight call",
+    "score": 2.345816935670853
+  },
+  {
+    "key": "White-crowned Sparrow||call",
+    "score": 2.3567107572979946
+  },
+  {
+    "key": "Black-and-white Warbler||nocturnal flight call",
+    "score": 2.36196161081709
+  },
+  {
+    "key": "Least Sandpiper||chatter call",
+    "score": 2.364336007794922
+  },
+  {
+    "key": "Canada Warbler||flight call",
+    "score": 2.3649929680003323
+  },
+  {
+    "key": "White-crowned Sparrow||contact calls",
+    "score": 2.367673393754217
+  },
+  {
+    "key": "Least Flycatcher||buzz calls",
+    "score": 2.3687598051722514
+  },
+  {
+    "key": "Blue Jay||flight call",
+    "score": 2.369097161767774
+  },
+  {
+    "key": "American Yellow Warbler||nocturnal flight call",
+    "score": 2.3721266929754443
+  },
+  {
+    "key": "Red-necked Phalarope||call",
+    "score": 2.373141510056817
+  },
+  {
+    "key": "Orange-crowned Warbler||call",
+    "score": 2.37399605807643
+  },
+  {
+    "key": "Northern Pygmy Owl||call",
+    "score": 2.3779195389498193
+  },
+  {
+    "key": "Short-billed Gull||long calls",
+    "score": 2.381291137008988
+  },
+  {
+    "key": "Song Sparrow||song",
+    "score": 2.383253931103726
+  },
+  {
+    "key": "Mourning Warbler||call",
+    "score": 2.387421271571176
+  },
+  {
+    "key": "American Redstart||type a song",
+    "score": 2.389144289085602
+  },
+  {
+    "key": "Golden-crowned Kinglet||flight call",
+    "score": 2.39064686420623
+  },
+  {
+    "key": "American Redstart||vertcial chip",
+    "score": 2.3923587593529705
+  },
+  {
+    "key": "American Redstart||descending chip",
+    "score": 2.3968085993001513
+  },
+  {
+    "key": "American Yellow Warbler||alarm call",
+    "score": 2.3984785821788988
+  },
+  {
+    "key": "Bay-breasted Warbler||nasal call in flight",
+    "score": 2.4019689203393146
+  },
+  {
+    "key": "Orange-crowned Warbler||contact calls",
+    "score": 2.4050846464717317
+  },
+  {
+    "key": "Black-and-white Warbler||chip",
+    "score": 2.410825157506172
+  },
+  {
+    "key": "Red-necked Phalarope||flock calls",
+    "score": 2.416268725531286
+  },
+  {
+    "key": "Spotted Towhee||high seet calls",
+    "score": 2.4171610924890787
+  },
+  {
+    "key": "Song Sparrow||chase call",
+    "score": 2.418006112738098
+  },
+  {
+    "key": "Northern Hawk-Owl||flight call",
+    "score": 2.4182704275739946
+  },
+  {
+    "key": "Purple Finch||alarm call",
+    "score": 2.42511037247101
+  },
+  {
+    "key": "Song Sparrow||rolled call",
+    "score": 2.4289795400475582
+  },
+  {
+    "key": "Wilson's Warbler||high buzzy calls - \"flight calls\"?",
+    "score": 2.429435235290104
+  },
+  {
+    "key": "Short-billed Gull||calls",
+    "score": 2.431118172988366
+  },
+  {
+    "key": "Least Sandpiper||taking off",
+    "score": 2.4318232584813178
+  },
+  {
+    "key": "Lewis's Woodpecker||trill",
+    "score": 2.43597618359679
+  },
+  {
+    "key": "White-crowned Sparrow||flight calls (3) given while perched",
+    "score": 2.437527726773567
+  },
+  {
+    "key": "Short-billed Gull||flight call",
+    "score": 2.4387348131648694
+  },
+  {
+    "key": "Eastern Towhee||high chip alarm call",
+    "score": 2.4437774094795395
+  },
+  {
+    "key": "American Robin||chase calls",
+    "score": 2.4442376593777047
+  },
+  {
+    "key": "American Yellow Warbler||chip grading into flight call",
+    "score": 2.4446807629640306
+  },
+  {
+    "key": "Common Tern||song",
+    "score": 2.4487507150592585
+  },
+  {
+    "key": "Horned Lark||flight call",
+    "score": 2.4487991163420446
+  },
+  {
+    "key": "Savannah Sparrow||alarm call",
+    "score": 2.4489755592331828
+  },
+  {
+    "key": "Orange-crowned Warbler||fledgling calls and adult contact calls",
+    "score": 2.4501928083754905
+  },
+  {
+    "key": "Spotted Sandpiper||nocturnal flight call",
+    "score": 2.4538654602148995
+  },
+  {
+    "key": "Pacific Wren||alarm call",
+    "score": 2.4565128542908696
+  },
+  {
+    "key": "American Redstart||nocturnal flight call",
+    "score": 2.4574577156390958
+  },
+  {
+    "key": "Pileated Woodpecker||flight call",
+    "score": 2.4582804259310564
+  },
+  {
+    "key": "LeConte's Sparrow||flight call",
+    "score": 2.4585002906965867
+  },
+  {
+    "key": "White-crowned Sparrow||agitation calls",
+    "score": 2.4592187563570587
+  },
+  {
+    "key": "Black-and-white Warbler||rattles",
+    "score": 2.4624997083511078
+  },
+  {
+    "key": "White-crowned Sparrow||chase calls",
+    "score": 2.4659958503021016
+  },
+  {
+    "key": "White-crowned Sparrow||interaction calls",
+    "score": 2.4665430278748395
+  },
+  {
+    "key": "Anna's Hummingbird||tik calls in flight",
+    "score": 2.4684468491707885
+  },
+  {
+    "key": "American Yellow Warbler||flight calls and burry contact calls",
+    "score": 2.468689224642452
+  },
+  {
+    "key": "Eastern Kingbird||song/calls",
+    "score": 2.468761908477384
+  },
+  {
+    "key": "Hooded Warbler||call",
+    "score": 2.468918422977062
+  },
+  {
+    "key": "LeConte's Sparrow||call",
+    "score": 2.4694059500248144
+  },
+  {
+    "key": "Wilson's Warbler||flight call",
+    "score": 2.469457755691056
+  },
+  {
+    "key": "American Yellow Warbler||calls and flight calls",
+    "score": 2.469900483269668
+  },
+  {
+    "key": "Song Sparrow||call",
+    "score": 2.4727821761679936
+  },
+  {
+    "key": "Ovenbird||chip",
+    "score": 2.473236396975216
+  },
+  {
+    "key": "White-crowned Sparrow||begging call",
+    "score": 2.4749153437440525
+  },
+  {
+    "key": "Short-billed Gull||call",
+    "score": 2.475050098238665
+  },
+  {
+    "key": "Bobolink||flight call",
+    "score": 2.476675991302635
+  },
+  {
+    "key": "Blackpoll Warbler||call",
+    "score": 2.4782580610699023
+  },
+  {
+    "key": "Black-and-white Warbler||series of calls",
+    "score": 2.4783832492976816
+  },
+  {
+    "key": "Downy Woodpecker||song",
+    "score": 2.482221314506685
+  },
+  {
+    "key": "Anna's Hummingbird||flight call",
+    "score": 2.4826887005564062
+  },
+  {
+    "key": "Bobolink||nasal call",
+    "score": 2.4831523151809183
+  },
+  {
+    "key": "Sharp-shinned Hawk||drumming",
+    "score": 2.4831988448810334
+  },
+  {
+    "key": "American Redstart||chip series",
+    "score": 2.484104491977772
+  },
+  {
+    "key": "Merlin||call",
+    "score": 2.4851773828354853
+  },
+  {
+    "key": "Willow Flycatcher||whit' calls",
+    "score": 2.4852188092560468
+  },
+  {
+    "key": "Anna's Hummingbird||fledgling calls",
+    "score": 2.4866208465242656
+  },
+  {
+    "key": "Song Sparrow||short song",
+    "score": 2.488332848512276
+  },
+  {
+    "key": "Spotted Sandpiper||alarm call",
+    "score": 2.4902661750102895
+  },
+  {
+    "key": "Western Tanager||flight call",
+    "score": 2.4907938580380633
+  },
+  {
+    "key": "Common Tern||nocturnal flight call",
+    "score": 2.4927993856044774
+  },
+  {
+    "key": "Eastern Meadowlark||also dzik and veet calls",
+    "score": 2.4942216116398828
+  },
+  {
+    "key": "Black-and-white Warbler||song",
+    "score": 2.495100912628389
+  },
+  {
+    "key": "Common Tern||simple call",
+    "score": 2.4954069890975727
+  },
+  {
+    "key": "Red-breasted Nuthatch||flight call",
+    "score": 2.4962613798811204
+  },
+  {
+    "key": "American Robin||nocturnal flight call",
+    "score": 2.497903144904502
+  },
+  {
+    "key": "American Woodcock||peent call",
+    "score": 2.4986456776739083
+  },
+  {
+    "key": "Downy Woodpecker||call",
+    "score": 2.499036229774031
+  },
+  {
+    "key": "Wood Thrush||nocturnal flight call",
+    "score": 2.499860537237429
+  },
+  {
+    "key": "White-crowned Sparrow||flight calls and contact calls from juveniles",
+    "score": 2.5018032663662315
+  },
+  {
+    "key": "Willow Flycatcher||'whit' calls and interaction calls",
+    "score": 2.5028658146653737
+  },
+  {
+    "key": "Song Sparrow||flight calls and contact calls",
+    "score": 2.5036457555360094
+  },
+  {
+    "key": "Downy Woodpecker||flight call",
+    "score": 2.5038856530494757
+  },
+  {
+    "key": "Cape May Warbler||flight call",
+    "score": 2.504281228886835
+  },
+  {
+    "key": "Purple Finch||flight calls and whistled calls",
+    "score": 2.5056981292446885
+  },
+  {
+    "key": "Swamp Sparrow||alarm call",
+    "score": 2.50930095980673
+  },
+  {
+    "key": "Purple Finch||whistled calls while perched and flight calls given while perched",
+    "score": 2.5102600918782714
+  },
+  {
+    "key": "Least Flycatcher||songs and short buzzy trills",
+    "score": 2.5117076399406786
+  },
+  {
+    "key": "Downy Woodpecker||begging call",
+    "score": 2.513552953768732
+  },
+  {
+    "key": "Orange-crowned Warbler||contact call",
+    "score": 2.514415524686769
+  },
+  {
+    "key": "Northern Waterthrush||flight call",
+    "score": 2.5166745387454394
+  },
+  {
+    "key": "Red Crossbill||song",
+    "score": 2.5169242545845165
+  },
+  {
+    "key": "Least Flycatcher||flight call",
+    "score": 2.5174874031034813
+  },
+  {
+    "key": "American Redstart||simple song",
+    "score": 2.5175658047169955
+  },
+  {
+    "key": "Marsh Wren||flight call",
+    "score": 2.5193304029529617
+  },
+  {
+    "key": "Song Sparrow||buzz calls",
+    "score": 2.521117007662941
+  },
+  {
+    "key": "American Redstart||two types of songs",
+    "score": 2.5241994433459354
+  },
+  {
+    "key": "Eastern Bluebird||flight song",
+    "score": 2.5252861598373824
+  },
+  {
+    "key": "Bicknell's Thrush||nocturnal flight call",
+    "score": 2.5258124383767036
+  },
+  {
+    "key": "Ovenbird||nocturnal flight call",
+    "score": 2.526567640822136
+  },
+  {
+    "key": "Least Flycatcher||flight songs",
+    "score": 2.5277905042878226
+  },
+  {
+    "key": "White-crowned Sparrow||nocturnal flight call",
+    "score": 2.5278123999147986
+  },
+  {
+    "key": "Song Sparrow||social calls",
+    "score": 2.530455917020726
+  },
+  {
+    "key": "Black-and-white Warbler||flat",
+    "score": 2.5332277909434753
+  },
+  {
+    "key": "Chimney Swift||flight call",
+    "score": 2.53364841334631
+  },
+  {
+    "key": "Northern Parula||interaction calls",
+    "score": 2.536160846815063
+  },
+  {
+    "key": "Downy Woodpecker||whinny call",
+    "score": 2.5372355250240712
+  },
+  {
+    "key": "Black-backed Woodpecker||pik call",
+    "score": 2.537989917323435
+  },
+  {
+    "key": "Canada Warbler||nocturnal flight call",
+    "score": 2.538241921627398
+  },
+  {
+    "key": "Downy Woodpecker||alarm call",
+    "score": 2.539050922980079
+  },
+  {
+    "key": "American Redstart||intermediate call",
+    "score": 2.5394008765215594
+  },
+  {
+    "key": "Black-and-white Warbler||rattle",
+    "score": 2.5394609870204663
+  },
+  {
+    "key": "Savannah Sparrow||flight call",
+    "score": 2.5406776247953036
+  },
+  {
+    "key": "Wilson's Snipe||alarm call",
+    "score": 2.541039081462014
+  },
+  {
+    "key": "Black Guillemot||song",
+    "score": 2.541744421312082
+  },
+  {
+    "key": "Blue-winged Teal||flight call",
+    "score": 2.5423987734280478
+  },
+  {
+    "key": "Black Guillemot||flight call",
+    "score": 2.544840492320797
+  },
+  {
+    "key": "Hermit Thrush||piercing call",
+    "score": 2.544972033794567
+  },
+  {
+    "key": "Purple Finch||flight calls",
+    "score": 2.5461348286675176
+  },
+  {
+    "key": "LeConte's Sparrow||call and flight song",
+    "score": 2.5462121145392187
+  },
+  {
+    "key": "Pine Warbler||chip",
+    "score": 2.5486792838776235
+  },
+  {
+    "key": "Brown Thrasher||flight call",
+    "score": 2.5495755142399115
+  },
+  {
+    "key": "Bay-breasted Warbler||alarm call",
+    "score": 2.5505516054139163
+  },
+  {
+    "key": "American Yellow Warbler||contact and flight calls",
+    "score": 2.5507122601948944
+  },
+  {
+    "key": "Common Redpoll||flight call",
+    "score": 2.5525412753278585
+  },
+  {
+    "key": "Canada Warbler||call",
+    "score": 2.554219353198112
+  },
+  {
+    "key": "American Yellow Warbler||adult flight calls and contact calls; fledgling calls",
+    "score": 2.554702178140664
+  },
+  {
+    "key": "Lewis's Woodpecker||short rattle",
+    "score": 2.5554197814374984
+  },
+  {
+    "key": "Sanderling||flight call",
+    "score": 2.5590434044729626
+  },
+  {
+    "key": "Dark-eyed Junco||flight call",
+    "score": 2.5593119941265066
+  },
+  {
+    "key": "White-crowned Sparrow||mixed calls",
+    "score": 2.5593444965255174
+  },
+  {
+    "key": "Blackpoll Warbler||flight call",
+    "score": 2.5600640927980476
+  },
+  {
+    "key": "Red-winged Blackbird||high seep calls",
+    "score": 2.5604115550740962
+  },
+  {
+    "key": "Townsend's Warbler||flight call",
+    "score": 2.5614882617156502
+  },
+  {
+    "key": "Eastern Phoebe||alarm call",
+    "score": 2.5616504408432297
+  },
+  {
+    "key": "Red-winged Blackbird||interaction calls in flight",
+    "score": 2.5621659700774817
+  },
+  {
+    "key": "Golden-crowned Sparrow||flight calls and a few chatter calls",
+    "score": 2.562755902206501
+  },
+  {
+    "key": "Audubon's Warbler||chip call",
+    "score": 2.5639042835285495
+  },
+  {
+    "key": "American Robin||kuk call in flight",
+    "score": 2.5639880184019175
+  },
+  {
+    "key": "Eastern Kingbird||song",
+    "score": 2.5663962897477948
+  },
+  {
+    "key": "Short-eared Owl||nocturnal flight call",
+    "score": 2.566895551983335
+  },
+  {
+    "key": "Cape May Warbler||migratory flight high in the sky",
+    "score": 2.56725463431644
+  },
+  {
+    "key": "Warbling Vireo||flight call",
+    "score": 2.568011255212041
+  },
+  {
+    "key": "Canada Warbler||alarm call",
+    "score": 2.568712008101588
+  },
+  {
+    "key": "Eastern Bluebird||song",
+    "score": 2.570091815127995
+  },
+  {
+    "key": "Red Crossbill||tewp calls",
+    "score": 2.5725422390107755
+  },
+  {
+    "key": "American Robin||mobbing calls",
+    "score": 2.573610725821353
+  },
+  {
+    "key": "Townsend's Warbler||contact call",
+    "score": 2.5747024674501913
+  },
+  {
+    "key": "Red Crossbill||tewp call",
+    "score": 2.5748947151169634
+  },
+  {
+    "key": "Swamp Sparrow||high chip",
+    "score": 2.574976033810516
+  },
+  {
+    "key": "American Yellow Warbler||descending chip",
+    "score": 2.575765655588896
+  },
+  {
+    "key": "Least Flycatcher||flight growls",
+    "score": 2.5779523741832646
+  },
+  {
+    "key": "Blackpoll Warbler||alarm call",
+    "score": 2.5788928839065934
+  },
+  {
+    "key": "Red-breasted Sapsucker||flight call",
+    "score": 2.580527191624369
+  },
+  {
+    "key": "Red-necked Phalarope||variable chattering",
+    "score": 2.5806077753331844
+  },
+  {
+    "key": "Ruby-crowned Kinglet||flight call",
+    "score": 2.581159513453
+  },
+  {
+    "key": "Red Crossbill||unusual call/song",
+    "score": 2.581314453389815
+  },
+  {
+    "key": "Warbling Vireo||calls (buzzes)",
+    "score": 2.5830033626761977
+  },
+  {
+    "key": "White-crowned Sparrow||pink",
+    "score": 2.5835953350013416
+  },
+  {
+    "key": "Black-headed Grosbeak||call",
+    "score": 2.587139293778934
+  },
+  {
+    "key": "American Woodcock||chips",
+    "score": 2.5877031111622855
+  },
+  {
+    "key": "Arctic Tern||flight call",
+    "score": 2.588212298588129
+  },
+  {
+    "key": "Least Sandpiper||nocturnal flight call",
+    "score": 2.5885923399385917
+  },
+  {
+    "key": "Tree Swallow||alarm call",
+    "score": 2.588777328134467
+  },
+  {
+    "key": "Western Kingbird||mating",
+    "score": 2.5893139927205957
+  },
+  {
+    "key": "Northern Cardinal||flight call",
+    "score": 2.5900751423571653
+  },
+  {
+    "key": "Golden-crowned Kinglet||alarm call",
+    "score": 2.590748466514561
+  },
+  {
+    "key": "Magnolia Warbler||flight call",
+    "score": 2.592018724306482
+  },
+  {
+    "key": "Song Sparrow||contact calls and buzz calls",
+    "score": 2.5929226552736666
+  },
+  {
+    "key": "Canada Jay||squeaky calls",
+    "score": 2.5934407132071224
+  }
+]
