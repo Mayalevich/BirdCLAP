@@ -179,6 +179,7 @@ class ClapPairDataset(Dataset):
         verbose: bool = True,
         augment: bool = False,
         labels_path: Path | None = None,
+        rich_text_prob: float = 0.0,
     ) -> None:
         raw: list[dict[str, str]] = json.loads(
             pairs_path.read_text(encoding="utf-8")
@@ -188,6 +189,7 @@ class ClapPairDataset(Dataset):
         self.clip_s  = clip_s
         self.root    = audio_root
         self.augment = augment
+        self.rich_text_prob = max(0.0, min(1.0, float(rich_text_prob)))
         # Full label pool per combo for text augmentation (random pick each step)
         self.labels: dict[str, list[str]] = (
             json.loads(labels_path.read_text(encoding="utf-8"))
@@ -230,7 +232,7 @@ class ClapPairDataset(Dataset):
         combo = pair.get("combo", "")
         text  = pair["text"]
         if self.augment and combo and combo in self.labels:
-            text = random.choice(self.labels[combo])
+            text = _sample_label_variant(self.labels[combo], self.rich_text_prob)
 
         return {
             "audio":      audio,
@@ -287,12 +289,14 @@ class ClapPrecomputedDataset(Dataset):
         verbose: bool = True,
         augment: bool = False,
         labels_path: Path | None = None,
+        rich_text_prob: float = 0.0,
     ) -> None:
         raw: list[dict[str, str]] = json.loads(
             pairs_path.read_text(encoding="utf-8")
         )
         self.root    = audio_root
         self.augment = augment
+        self.rich_text_prob = max(0.0, min(1.0, float(rich_text_prob)))
         self.labels: dict[str, list[str]] = (
             json.loads(labels_path.read_text(encoding="utf-8"))
             if labels_path and labels_path.exists() else {}
@@ -328,7 +332,7 @@ class ClapPrecomputedDataset(Dataset):
         combo = pair.get("combo", "")
         text  = pair["text"]
         if self.augment and combo and combo in self.labels:
-            text = random.choice(self.labels[combo])
+            text = _sample_label_variant(self.labels[combo], self.rich_text_prob)
 
         return {
             # keep the batch dim (1, …) — collate_precomputed_fn cats along dim 0
@@ -426,10 +430,12 @@ def contrastive_loss(
     audio_paths: list[str],
     combo_weights: dict[str, float] | None = None,
     combo_hard_negs: dict[str, set] | None = None,
+    hard_neg_boost: float = 2.0,
+    label_smoothing: float = 0.0,
 ) -> Tensor:
     """
-    Multi-positive symmetric InfoNCE with optional dataset-level combo weighting
-    and hard negative boosting.
+    Multi-positive symmetric InfoNCE with optional dataset-level combo weighting,
+    hard negative boosting, and label smoothing.
 
     Both embeddings are assumed already L2-normalised. Instead of treating only
     the diagonal as positive (which causes false negatives when two clips from the
@@ -447,8 +453,13 @@ def contrastive_loss(
     Weights are normalised within the batch to keep the loss scale stable.
 
     combo_hard_negs: {combo: set of same-genus different-species combos}.
-    When provided, logits between hard-negative pairs are boosted by 2×
+    When provided, logits between hard-negative pairs are boosted by `hard_neg_boost`×
     before softmax, forcing the model to push confusable species apart harder.
+    Set hard_neg_boost=1.0 to disable the boost while keeping the lookup.
+
+    label_smoothing: blends the per-row soft targets with a uniform distribution
+    so no entry ever receives a target of 0 or 1. Reduces overconfidence and
+    acts as a regulariser on the contrastive objective (0.0 = off).
 
     Falls back to standard diagonal loss when combo/path info is absent
     (e.g. old pair files without the "combo" field).
@@ -460,7 +471,8 @@ def contrastive_loss(
     # Fast path: no metadata → standard diagonal CLIP loss
     if not combos or not any(combos):
         labels = torch.arange(N, device=logits.device)
-        return (F.cross_entropy(logits, labels) + F.cross_entropy(logits.T, labels)) / 2.0
+        return (F.cross_entropy(logits, labels, label_smoothing=label_smoothing)
+                + F.cross_entropy(logits.T, labels, label_smoothing=label_smoothing)) / 2.0
 
     # Build positive mask on CPU then move to device (small N, negligible cost)
     mask = torch.zeros(N, N)
@@ -472,20 +484,27 @@ def contrastive_loss(
                 mask[i][j] = 1.0
     mask = mask.to(logits.device)
 
-    # Hard negative boost: same-genus different-species pairs get 2× logit weight
-    # so the model is penalised harder for confusing acoustically similar species.
-    if combo_hard_negs is not None:
+    # Hard negative boost: same-genus different-species pairs get hard_neg_boost× logit
+    # weight so the model is penalised harder for confusing acoustically similar species.
+    # Set hard_neg_boost=1.0 to disable without removing the genus lookup entirely.
+    if combo_hard_negs is not None and hard_neg_boost != 1.0:
         boost = torch.ones(N, N, device=logits.device)
         for i in range(N):
             hard_set = combo_hard_negs.get(combos[i])
             if hard_set:
                 for j in range(N):
                     if combos[j] in hard_set and mask[i, j] == 0:
-                        boost[i, j] = 2.0
+                        boost[i, j] = hard_neg_boost
         logits = logits * boost
 
     # Normalise rows → soft targets that sum to 1
     targets = mask / mask.sum(dim=1, keepdim=True).clamp(min=1.0)
+
+    # Label smoothing: blend soft targets toward uniform so the model is never
+    # forced to assign zero probability to any negative. Smoothed targets still
+    # sum to 1 per row; positives retain the majority of the probability mass.
+    if label_smoothing > 0.0:
+        targets = (1.0 - label_smoothing) * targets + label_smoothing / N
 
     loss_per_row_a = -(targets   * F.log_softmax(logits,   dim=1)).sum(dim=1)
     loss_per_row_t = -(targets.T * F.log_softmax(logits.T, dim=1)).sum(dim=1)
@@ -747,6 +766,30 @@ def apply_mixup(
     return features
 
 
+def _looks_rich_label(text: str) -> bool:
+    """Heuristic: rich labels are sentence-like, not taxonomy/template strings."""
+    t = text.strip()
+    if not t:
+        return False
+    if " > " in t:
+        return False
+    return len(t.split()) >= 12
+
+
+def _sample_label_variant(labels: list[str], rich_text_prob: float) -> str:
+    """Sample text variant, optionally biasing toward richer sentence labels."""
+    valid = [s for s in labels if isinstance(s, str) and s.strip()]
+    if not valid:
+        return ""
+    if rich_text_prob <= 0.0:
+        return random.choice(valid)
+    rich = [s for s in valid if _looks_rich_label(s)]
+    other = [s for s in valid if s not in rich]
+    if rich and other:
+        return random.choice(rich if random.random() < rich_text_prob else other)
+    return random.choice(valid)
+
+
 # ── training loop ──────────────────────────────────────────────────────────────
 
 def train_one_epoch(
@@ -762,6 +805,8 @@ def train_one_epoch(
     combo_weights: dict[str, float] | None = None,
     combo_hard_negs: dict[str, set] | None = None,
     mixup_alpha: float = 0.0,
+    hard_neg_boost: float = 2.0,
+    label_smoothing: float = 0.0,
 ) -> float:
     model.train()
     total_loss = 0.0
@@ -797,7 +842,9 @@ def train_one_epoch(
             a_emb = F.normalize(audio_feat.pooler_output, dim=-1)
             t_emb = F.normalize(text_feat.pooler_output,  dim=-1)
             loss  = contrastive_loss(a_emb, t_emb, model.logit_scale_a, combos, paths,
-                                     combo_weights, combo_hard_negs)
+                                     combo_weights, combo_hard_negs,
+                                     hard_neg_boost=hard_neg_boost,
+                                     label_smoothing=label_smoothing)
             loss  = loss / accum_steps
 
         scaler.scale(loss).backward()
@@ -825,6 +872,8 @@ def validate(
     use_amp: bool,
     combo_weights: dict[str, float] | None = None,
     combo_hard_negs: dict[str, set] | None = None,
+    hard_neg_boost: float = 2.0,
+    label_smoothing: float = 0.0,
 ) -> float:
     model.eval()
     total_loss = 0.0
@@ -849,7 +898,9 @@ def validate(
             a_emb = F.normalize(audio_feat.pooler_output, dim=-1)
             t_emb = F.normalize(text_feat.pooler_output,  dim=-1)
             loss  = contrastive_loss(a_emb, t_emb, model.logit_scale_a, combos, paths,
-                                     combo_weights, combo_hard_negs)
+                                     combo_weights, combo_hard_negs,
+                                     hard_neg_boost=hard_neg_boost,
+                                     label_smoothing=label_smoothing)
         total_loss += loss.item()
         n_batches  += 1
 
@@ -983,7 +1034,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                     help="Audio encoder LR multiplier relative to --lr (default 0.1 → audio gets 2e-6)")
     ap.add_argument("--lr-text-mult",  type=float, default=0.5,
                     help="Text encoder LR multiplier relative to --lr (default 0.5 → text gets 1e-5)")
-    ap.add_argument("--warmup-steps", type=int,   default=200,   help="LR warmup steps (default 200)")
+    ap.add_argument("--warmup-steps", type=int,   default=500,   help="LR warmup steps (default 500)")
     ap.add_argument("--workers",      type=int,   default=default_workers(), help="DataLoader worker processes (default auto)")
     ap.add_argument("--prefetch-factor", type=int, default=2,    help="DataLoader prefetch factor when workers > 0 (default 2)")
     ap.add_argument("--clip-s",       type=float, default=CLIP_DURATION_S, help="Audio clip length in seconds (default 10.0)")
@@ -1049,6 +1100,34 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--mixup-alpha", type=float, default=0.4,
         help="Beta distribution alpha for within-combo mixup (default 0.4; 0 to disable). "
              "Blends same-species mel spectrograms — keeps positive mask valid.",
+    )
+    ap.add_argument(
+        "--hard-neg-boost", type=float, default=2.0,
+        help="Logit multiplier applied to same-genus hard negatives in the contrastive loss "
+             "(default 2.0). Set to 1.0 to disable the boost while keeping genus lookup. "
+             "Very high values can destabilise training; try 1.5 if R@1 regresses.",
+    )
+    ap.add_argument(
+        "--hard-neg-ramp-epochs", type=int, default=2,
+        help="Linearly ramp hard-neg boost from 1.0 to --hard-neg-boost over this many "
+             "epochs (default 2). Set 0 to disable ramping.",
+    )
+    ap.add_argument(
+        "--label-smoothing", type=float, default=0.0,
+        help="Blend the per-row soft targets with a uniform distribution to reduce "
+             "overconfidence (default 0.0 = off; try 0.1 for extra regularisation).",
+    )
+    ap.add_argument(
+        "--no-loss-weights", action="store_true",
+        help="Disable combo inverse-frequency weighting inside the contrastive loss. "
+             "The WeightedRandomSampler still balances sampling — this flag just stops "
+             "the double-reweighting effect (sampler + loss both active by default).",
+    )
+    ap.add_argument(
+        "--rich-text-prob", type=float, default=0.75,
+        help="When text augmentation is on, probability of sampling a richer sentence-like "
+             "label variant instead of short taxonomy/template labels (default 0.75). "
+             "Set 0 to keep uniform label sampling.",
     )
     return ap.parse_args(argv)
 
@@ -1116,6 +1195,11 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         f"| Train pairs | {n_train:,} |",
         f"| Val pairs | {n_val:,} |",
         f"| Hard negatives | {'enabled (same-genus)' if Path(args.taxonomy).exists() else 'disabled (taxonomy not found)'} |",
+        f"| Hard neg boost | {args.hard_neg_boost} |",
+        f"| Hard neg ramp epochs | {args.hard_neg_ramp_epochs} |",
+        f"| Label smoothing | {args.label_smoothing} |",
+        f"| Loss combo weights | {'disabled (--no-loss-weights)' if args.no_loss_weights else 'enabled (inverse-frequency)'} |",
+        f"| Rich text sampling prob | {args.rich_text_prob} |",
         f"| Seed | {args.seed} |",
         "",
         "---",
@@ -1233,6 +1317,11 @@ def main(argv: list[str] | None = None) -> int:
         f"persistent: {'off' if args.no_persistent_workers else 'on'}"
     )
     print(f"Data path:    {'pre-computed .clap.pt (fast)' if not args.no_precomputed else 'raw audio (slow)'}")
+    print(f"Hard-neg boost: {args.hard_neg_boost}  |  "
+          f"label smoothing: {args.label_smoothing}  |  "
+          f"loss weights: {'OFF (--no-loss-weights)' if args.no_loss_weights else 'ON'}")
+    print(f"Hard-neg ramp epochs: {args.hard_neg_ramp_epochs}  |  "
+          f"rich-text prob: {args.rich_text_prob}")
 
     # ── processor + model ─────────────────────────────────────────────────────
     print("\nLoading processor and model weights ...")
@@ -1276,13 +1365,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if use_precomputed:
         train_ds = ClapPrecomputedDataset(Path(args.train_pairs), audio_root,
-                                          augment=do_augment, labels_path=labels_path)
+                                          augment=do_augment, labels_path=labels_path,
+                                          rich_text_prob=args.rich_text_prob)
         val_ds   = ClapPrecomputedDataset(Path(args.val_pairs),   audio_root,
                                           augment=False)
         _collate = partial(collate_precomputed_fn, tokenizer=processor.tokenizer)
     else:
         train_ds = ClapPairDataset(Path(args.train_pairs), audio_root, clip_s=args.clip_s,
-                                   augment=do_augment, labels_path=labels_path)
+                                   augment=do_augment, labels_path=labels_path,
+                                   rich_text_prob=args.rich_text_prob)
         val_ds   = ClapPairDataset(Path(args.val_pairs),   audio_root, clip_s=args.clip_s,
                                    augment=False)
         _collate = partial(collate_fn, processor=processor, sr=TARGET_SR)
@@ -1312,6 +1403,15 @@ def main(argv: list[str] | None = None) -> int:
         combo: (total_combos / (n_combos * count))
         for combo, count in combo_freq.items()
     } if combo_freq else {}
+
+    # Separate weights for loss vs sampler so they can be decoupled.
+    # --no-loss-weights disables the per-sample weighting inside contrastive_loss
+    # while the WeightedRandomSampler (below) continues to balance sampling.
+    loss_combo_weights: dict[str, float] | None = (
+        None if args.no_loss_weights else combo_weights
+    )
+    if args.no_loss_weights:
+        print("  Loss combo weights: DISABLED (--no-loss-weights); sampler still active.")
 
     # WeightedRandomSampler: each training pair is sampled with probability
     # proportional to its combo's inverse frequency, so rare combos appear as
@@ -1413,6 +1513,7 @@ def main(argv: list[str] | None = None) -> int:
     # ── optional resume ───────────────────────────────────────────────────────
     start_epoch    = 0
     best_val_loss  = float("inf")
+    best_r1        = 0.0
 
     if args.resume and args.finetune_from:
         print("WARNING: both --resume and --finetune-from supplied. "
@@ -1488,12 +1589,24 @@ def main(argv: list[str] | None = None) -> int:
             elif not freeze_ls and epoch == args.freeze_logscale_epochs:
                 print(f"Epoch {epoch}: logit_scale unfrozen.")
 
+        effective_hard_neg_boost = args.hard_neg_boost
+        if args.hard_neg_ramp_epochs > 0:
+            frac = min(1.0, (epoch + 1) / max(1, args.hard_neg_ramp_epochs))
+            effective_hard_neg_boost = 1.0 + (args.hard_neg_boost - 1.0) * frac
+            if epoch == 0 or epoch < args.hard_neg_ramp_epochs:
+                print(f"Epoch {epoch:02d}: hard-neg boost ramp -> {effective_hard_neg_boost:.3f}")
+
         train_loss = train_one_epoch(
             model, train_loader, optimizer, scaler, scheduler,
-            device, args.accum, epoch, use_amp, combo_weights, combo_hard_negs,
+            device, args.accum, epoch, use_amp, loss_combo_weights, combo_hard_negs,
             mixup_alpha=args.mixup_alpha,
+            hard_neg_boost=effective_hard_neg_boost,
+            label_smoothing=args.label_smoothing,
         )
-        val_loss = validate(model, val_loader, device, use_amp, combo_weights, combo_hard_negs)
+        val_loss = validate(model, val_loader, device, use_amp,
+                            loss_combo_weights, combo_hard_negs,
+                            hard_neg_boost=effective_hard_neg_boost,
+                            label_smoothing=args.label_smoothing)
         r1       = recall_at_1(model, val_loader, processor, device)
 
         elapsed = time.time() - t0
@@ -1515,6 +1628,15 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"  [OK] new best val_loss={best_val_loss:.4f}  ->  {ckpt_dir}/best.pt")
 
+        # best_r1.pt: checkpoint chosen by highest training R@1 (may differ from best.pt)
+        if r1 > best_r1:
+            best_r1 = r1
+            save_checkpoint(
+                ckpt_dir / "best_r1.pt",
+                model, optimizer, scaler, scheduler, epoch, best_val_loss,
+            )
+            print(f"  [OK] new best R@1={best_r1:.4f}  ->  {ckpt_dir}/best_r1.pt")
+
         save_checkpoint(
             ckpt_dir / "latest.pt",
             model, optimizer, scaler, scheduler, epoch, best_val_loss,
@@ -1527,7 +1649,7 @@ def main(argv: list[str] | None = None) -> int:
                 scheduler=scheduler, best_val_loss=best_val_loss,
             )
 
-    print(f"\nTraining complete.  Best val loss: {best_val_loss:.4f}")
+    print(f"\nTraining complete.  Best val loss: {best_val_loss:.4f}  |  Best R@1: {best_r1:.4f}")
     print(f"Checkpoints: {ckpt_dir.resolve()}")
     _audit_finalize(audit_path, audit_rows, best_val_loss)
     return 0

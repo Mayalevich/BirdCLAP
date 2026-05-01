@@ -500,6 +500,24 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
     if not probe_queries:
         return [], {}
 
+    # Accept both {"query": "..."} and {"text": "..."} styles.
+    normalized_queries = []
+    for q in probe_queries:
+        if not isinstance(q, dict):
+            continue
+        text = q.get("query")
+        if not isinstance(text, str) or not text.strip():
+            text = q.get("text")
+        if not isinstance(text, str) or not text.strip():
+            continue
+        normalized_queries.append({
+            "query": text.strip(),
+            "positive_combos": q.get("positive_combos", []),
+        })
+    if not normalized_queries:
+        print("  [semantic_probe] no valid query items found (need 'query' or 'text').")
+        return [], {}
+
     combo_to_indices: dict[tuple, list[int]] = defaultdict(list)
     for idx, clip in enumerate(valid_clips):
         combo = clip_to_combo.get(clip)
@@ -507,7 +525,7 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
             combo_to_indices[combo].append(idx)
 
     # Encode all probe texts in one pass
-    texts = [q["query"] for q in probe_queries]
+    texts = [q["query"] for q in normalized_queries]
     flat_embs = []
     for i in range(0, len(texts), batch_size):
         flat_embs.append(encode_text_batch(texts[i : i + batch_size], processor, model, device))
@@ -515,7 +533,7 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
     sim_matrix  = text_matrix @ audio_matrix.T           # (n_queries, n_gallery)
 
     results = []
-    for q_idx, probe in enumerate(probe_queries):
+    for q_idx, probe in enumerate(normalized_queries):
         pos_indices: list[int] = []
         for combo_str in probe.get("positive_combos", []):
             if "||" in combo_str:
@@ -1264,7 +1282,12 @@ def main():
     if holdout_pairs_path.exists():
         print(f"\n{'='*72}")
         print(f"  Zero-shot eval: unseen species ({holdout_pairs_path})")
-        holdout_pairs_data = json.loads(holdout_pairs_path.read_text(encoding="utf-8"))
+        try:
+            # utf-8-sig tolerates BOM-prefixed files (common on Windows editors).
+            holdout_pairs_data = json.loads(holdout_pairs_path.read_text(encoding="utf-8-sig"))
+        except Exception as e:
+            print(f"  [warn] Failed to read holdout pairs ({holdout_pairs_path}): {e}")
+            holdout_pairs_data = []
         seen_h, holdout_clips_list = set(), []
         for p in holdout_pairs_data:
             if p["audio"] not in seen_h:
@@ -1274,24 +1297,31 @@ def main():
         })
         print(f"  Holdout clips: {len(holdout_clips_list)}  |  combos: {len(holdout_combos)}")
 
-        # Only taxonomy queries for holdout (no rich descriptions for unseen species)
-        holdout_strats = build_queries(holdout_combos, tax_db, all_labels)
+        if not holdout_clips_list or not holdout_combos:
+            print("  [info] Holdout set is empty after filtering; skipping zero-shot eval.")
+        else:
+            # Only taxonomy queries for holdout (no rich descriptions for unseen species)
+            holdout_strats = build_queries(holdout_combos, tax_db, all_labels)
 
-        def evaluate_holdout(checkpoint, label):
-            model, processor = load_model(checkpoint, args.model, device)
-            agg, detail, _ = run_eval(
-                model, processor, holdout_clips_list, clip_to_combo,
-                holdout_strats, audio_root, device, args.batch_size)
-            del model
-            print_table(f"{label} [ZERO-SHOT unseen species]", agg)
-            return {"agg": agg, "detail": detail}
+            def evaluate_holdout(checkpoint, label):
+                model, processor = load_model(checkpoint, args.model, device)
+                agg, detail, _ = run_eval(
+                    model, processor, holdout_clips_list, clip_to_combo,
+                    holdout_strats, audio_root, device, args.batch_size)
+                del model
+                print_table(f"{label} [ZERO-SHOT unseen species]", agg)
+                return {"agg": agg, "detail": detail}
 
-        if args.checkpoint:
-            all_results["finetuned_zeroshot"] = evaluate_holdout(
-                args.checkpoint, f"Fine-tuned: {args.checkpoint}")
-        if args.also_base or not args.checkpoint:
-            all_results["base_zeroshot"] = evaluate_holdout(
-                None, f"Base model (zero-shot): {args.model}")
+            try:
+                if args.checkpoint:
+                    all_results["finetuned_zeroshot"] = evaluate_holdout(
+                        args.checkpoint, f"Fine-tuned: {args.checkpoint}")
+                if args.also_base or not args.checkpoint:
+                    all_results["base_zeroshot"] = evaluate_holdout(
+                        None, f"Base model (zero-shot): {args.model}")
+            except Exception as e:
+                print(f"  [warn] Zero-shot holdout eval failed: {e}")
+                print("  [warn] Continuing to save main eval results and plots.")
     else:
         print(f"\n[info] No holdout pairs at {holdout_pairs_path} — zero-shot species eval skipped")
 
