@@ -415,6 +415,23 @@ a:hover {
   border-radius: var(--radius);
 }
 
+.spectrogram-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.spectrogram-preview-row .spectrogram-preview {
+  margin-top: 0;
+}
+
+.spectrogram-preview-row > .btn {
+  flex-shrink: 0;
+  align-self: center;
+}
+
 .spectrogram-preview {
   margin-top: 1rem;
   padding: 0.75rem 0.85rem;
@@ -808,6 +825,15 @@ a:hover {
 
 .viz-sound-species-card__rec {
   margin-top: 0.35rem;
+}
+
+.viz-upload-footer {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-mono);
+  word-break: break-word;
 }
 
 .viz-page__hint {

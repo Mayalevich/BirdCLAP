@@ -10,33 +10,72 @@ import {
   enrichChirpRgb,
   extractChirpChains,
   freqToColor,
+  syntheticAudioToWavBlob,
 } from "@/lib/audioDrivenPointCloud";
 
-interface BirdSoundEmbeddingVizProps {
+interface FrequencyChirpVizProps {
   /** Drives deterministic fallback when no real audio file is available. */
   seed: string;
   audioFile?: File | null;
 }
 
-type NarrativePhase = "idle" | "lighting" | "hold" | "fade" | "gap";
-
 const FPS = 60;
-const IDLE_FIRST_MS = 720;
-const IDLE_LOOP_MS = 520;
-const NODE_LIGHT_MS = 32;
-const HOLD_MS = 420;
-const FADE_MS = 1550;
-const GAP_MS = 480;
 const GHOST_GREY_R = 0.004;
 const GHOST_GREY_G = 0.005;
 const GHOST_GREY_B = 0.006;
 
+const MIN_FREQ = 2000;
+const MAX_FREQ = 8000;
+
 /**
- * WebGL 3D view from frame-level audio: starts empty, then each detected chirp
- * lights a temporal chain of squares in order, holds, fades out, and gaps before the next.
+ * 3‑D layout: amplitude + band on Y/Z plus stable “gesture phase” ribbons.
+ *
+ * Inside a chirp segment, **horizontal spread is progress through that call only** (`normWithin 0→1`).
+ * Repeated identical chirps reuse the **same** X‑wiggle corridor (overlay), not an endless L→R
+ * marquee from global clip time. Silence / gaps use a compact wiggle so ghosts don’t scan sideways.
  */
-export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingVizProps) {
+function spectrogramSampleToPosition(
+  emissionTimeSec: number,
+  totalDurSec: number,
+  freqHz: number,
+  amplitudeRaw: number,
+  maxAmp: number,
+  normWithinSegment: number | null
+): [number, number, number] {
+  const normT = emissionTimeSec / totalDurSec;
+  const normF = Math.max(0, Math.min(1, (freqHz - MIN_FREQ) / (MAX_FREQ - MIN_FREQ)));
+  const normA = maxAmp > 1e-8 ? amplitudeRaw / maxAmp : amplitudeRaw;
+
+  let x: number;
+  if (normWithinSegment != null) {
+    x = (normWithinSegment - 0.5) * 5.45;
+  } else {
+    x = Math.sin(normT * Math.PI * 2 * 11) * 0.65 + Math.cos(normT * Math.PI * 2 * 19 + 1.3) * 0.42;
+  }
+
+  const y = (normF - 0.5) * 3.15;
+
+  /** Local gesture phase; gaps fall back to `normT` only for leftover depth texture. */
+  const phaseRibbon = normWithinSegment != null ? normWithinSegment : normT;
+
+  const wobble =
+    0.5 * Math.sin(phaseRibbon * Math.PI * 18 + normF * Math.PI * 9) +
+    0.4 * Math.sin(phaseRibbon * Math.PI * 31 - normF * Math.PI * 13) +
+    0.28 * Math.cos(phaseRibbon * Math.PI * 8 + normA * Math.PI * 6);
+
+  const z = (normA - 0.38) * 3.05 + wobble * (0.3 + normA * 0.95);
+
+  return [x, y, z];
+}
+
+/**
+ * Frame-level audio viz: spectrogram-ish 3‑D placement; highlights follow **detected chirp chains**
+ * only — the playhead marches forward along each segment in lockstep with `audio.currentTime`,
+ * not a blanket time window over the whole clip (that read as an out‑of‑sync slideshow).
+ */
+export function BirdSoundEmbeddingViz({ seed, audioFile }: FrequencyChirpVizProps) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -56,6 +95,7 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
     let bloomPass: UnrealBloomPass | null = null;
     let labelEls: HTMLDivElement[] = [];
     let labels: CSS2DObject[] = [];
+    let playbackObjectUrl: string | null = null;
 
     const setup = async () => {
       const points = await buildAudioDrivenPoints(seed, audioFile);
@@ -63,10 +103,10 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
 
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0x050608);
-      scene.fog = new THREE.Fog(0x050608, 4.8, 18);
+      scene.fog = new THREE.Fog(0x050608, 5.6, 24);
 
       const camera = new THREE.PerspectiveCamera(46, 1, 0.08, 90);
-      camera.position.set(2.6, 1.6, 3.1);
+      camera.position.set(3.15, 1.95, 4.35);
 
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -103,39 +143,73 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       const amplitudes = new Float32Array(points.length);
       const emissions = new Float32Array(points.length);
       const freqs = new Float32Array(points.length);
-      const totalDur = points[points.length - 1]?.emissionTime ?? 1;
+      const totalDur = Math.max(1 / FPS, points[points.length - 1]?.emissionTime ?? 1 / FPS);
+
+      let maxAmpAll = 0;
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i]!;
+        amplitudes[i] = p.amplitude;
+        emissions[i] = p.emissionTime;
+        freqs[i] = p.freqHz;
+        maxAmpAll = Math.max(maxAmpAll, p.amplitude);
+      }
+
+      const chirpOpts = {
+        gapSeconds: 0.068,
+        minChirpSeconds: 0.048,
+        maxNodes: 200,
+      } as const;
+      const chains = extractChirpChains(amplitudes, FPS, chirpOpts);
+
+      const chainOfFrame = new Int32Array(points.length).fill(-1);
+      const segT0: number[] = [];
+      const segT1: number[] = [];
+      chains.forEach((ch, cid) => {
+        const i0 = ch[0]!;
+        const i1 = ch[ch.length - 1]!;
+        segT0[cid] = emissions[i0]!;
+        segT1[cid] = emissions[i1]!;
+        for (const idx of ch) chainOfFrame[idx] = cid;
+      });
 
       for (let i = 0; i < points.length; i++) {
         const p = points[i]!;
-        const t = p.emissionTime;
-        const tNorm = t / Math.max(0.001, totalDur);
-        const amp = p.amplitude;
-        const normF = Math.max(0, Math.min(1, (p.freqHz - 2000) / 6000));
-        const x = (tNorm - 0.5) * 4.2 + Math.sin(t * 0.8 + normF * 2.1) * 0.42;
-        const y = (normF - 0.5) * 1.65 + Math.sin(t * 2.3 + amp * 2.4) * (0.26 + amp * 0.3);
-        const z =
-          Math.cos(t * 1.6 + normF * 3.2) * (0.55 + amp * 0.9) +
-          Math.sin(t * 0.62 + amp * 4.4) * 0.34;
+        const cid = chainOfFrame[i]!;
+        let normWithin: number | null = null;
+        if (cid >= 0) {
+          const t0 = segT0[cid]!;
+          const t1 = segT1[cid]!;
+          const denom = Math.max(t1 - t0, 1 / FPS);
+          normWithin = Math.max(0, Math.min(1, (emissions[i]! - t0) / denom));
+        }
+        const [x, y, z] = spectrogramSampleToPosition(
+          p.emissionTime,
+          totalDur,
+          p.freqHz,
+          p.amplitude,
+          maxAmpAll,
+          normWithin
+        );
         basePos[i * 3] = x;
         basePos[i * 3 + 1] = y;
         basePos[i * 3 + 2] = z;
         positions[i * 3] = x;
         positions[i * 3 + 1] = y;
         positions[i * 3 + 2] = z;
-
-        amplitudes[i] = amp;
-        emissions[i] = t;
-        freqs[i] = p.freqHz;
       }
 
-      const chains = extractChirpChains(amplitudes, FPS);
+      const sortedAmp = Array.from(amplitudes).sort((a, b) => a - b);
+      const q15Idx = Math.min(sortedAmp.length - 1, Math.floor(sortedAmp.length * 0.15));
+      const q15 = sortedAmp[q15Idx] ?? 0.018;
+      const ampLitFloor = Math.max(0.009, Math.min(0.08, q15 * 0.92));
       let maxChain = 0;
-      let maxSeg = 0;
       for (const c of chains) {
         maxChain = Math.max(maxChain, c.length);
-        maxSeg = Math.max(maxSeg, Math.max(0, c.length - 1));
       }
-      const allocSegs = Math.max(1, maxSeg);
+      const labelSlots = Math.min(96, Math.max(maxChain, 32));
+      let chainEdgeCount = 0;
+      for (const c of chains) chainEdgeCount += Math.max(0, c.length - 1);
+      const allocSegs = Math.min(4096, Math.max(chainEdgeCount, 32));
 
       for (let i = 0; i < points.length; i++) {
         colors[i * 3] = 0;
@@ -147,7 +221,7 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       pointsGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       pointsGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       pointsMaterial = new THREE.PointsMaterial({
-        size: 0.19,
+        size: 0.15,
         vertexColors: true,
         sizeAttenuation: true,
         transparent: true,
@@ -174,7 +248,7 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       scene.add(lineSegments);
 
       const labelRoot = new THREE.Group();
-      for (let j = 0; j < maxChain; j++) {
+      for (let j = 0; j < labelSlots; j++) {
         const el = document.createElement("div");
         el.className = "embedding-viz__label";
         const ampRow = document.createElement("div");
@@ -205,7 +279,7 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       };
       composer = new EffectComposer(renderer);
       const renderScene = new RenderPass(scene, camera);
-      bloomPass = new UnrealBloomPass(bloomResolution(), 1.02, 0.74, 0.048);
+      bloomPass = new UnrealBloomPass(bloomResolution(), 1.82, 0.88, 0.022);
       composer.addPass(renderScene);
       composer.addPass(bloomPass);
 
@@ -221,27 +295,14 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
         composer.setPixelRatio(p);
         composer.setSize(w, h);
         labelRenderer.setSize(w, h);
+        if (bloomPass) {
+          const br = bloomResolution();
+          bloomPass.resolution.set(br.x, br.y);
+        }
       };
       setSize();
       resizeObserver = new ResizeObserver(() => setSize());
       resizeObserver.observe(mount);
-
-      const narrative: {
-        phase: NarrativePhase;
-        phaseStart: number;
-        chirpIdx: number;
-        loopCount: number;
-      } = {
-        phase: "idle",
-        phaseStart: performance.now(),
-        chirpIdx: 0,
-        loopCount: 0,
-      };
-
-      const advance = (phase: NarrativePhase, now: number) => {
-        narrative.phase = phase;
-        narrative.phaseStart = now;
-      };
 
       const animate = () => {
         if (
@@ -256,74 +317,77 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
         )
           return;
         raf = requestAnimationFrame(animate);
-        const now = performance.now();
-        const dt = now - narrative.phaseStart;
-        const chain = chains[narrative.chirpIdx % chains.length]!;
 
-        let litCount = 0;
-        let masterFade = 0;
+        // Drive the playhead from the HTMLAudio clock whenever we have an element (paused or not).
+        // Using wall-clock when paused broke sync after autoplay denial and made scrubbing meaningless.
+        const au = audioRef.current;
+        const rawClock = au != null ? au.currentTime : (performance.now() / 1000) % totalDur;
+        /** No `% totalDur`: that wrapped long uploads onto the wrong part of the track. Clamp to analyzed span. */
+        const lastEmission = emissions[points.length - 1]!;
+        const audioTime = Math.min(
+          Math.max(0, rawClock),
+          Math.max(lastEmission, totalDur) - 0.25 / FPS
+        );
 
-        switch (narrative.phase) {
-          case "idle": {
-            const needMs = narrative.loopCount === 0 ? IDLE_FIRST_MS : IDLE_LOOP_MS;
-            masterFade = 0;
-            if (dt >= needMs) advance("lighting", now);
-            break;
-          }
-          case "lighting": {
-            masterFade = 1;
-            litCount = Math.min(chain.length, Math.floor(dt / NODE_LIGHT_MS) + 1);
-            if (dt >= chain.length * NODE_LIGHT_MS) advance("hold", now);
-            break;
-          }
-          case "hold": {
-            masterFade = 1;
-            litCount = chain.length;
-            if (dt >= HOLD_MS) advance("fade", now);
-            break;
-          }
-          case "fade": {
-            masterFade = Math.max(0, 1 - dt / FADE_MS);
-            litCount = chain.length;
-            if (dt >= FADE_MS) advance("gap", now);
-            break;
-          }
-          case "gap": {
-            masterFade = 0;
-            litCount = 0;
-            if (dt >= GAP_MS) {
-              const next = (narrative.chirpIdx + 1) % chains.length;
-              narrative.chirpIdx = next;
-              if (next === 0) narrative.loopCount++;
-              advance("idle", now);
+        /** One playhead sample + tight decay — gate on RMS only so every similar chirp is treated evenly. */
+        const DECAY_SEC = 0.075;
+
+        const nearestFrameIndex = (t: number): number => {
+          const probe = Math.min(points.length - 1, Math.max(0, Math.floor(t * FPS + 1e-6)));
+          let best = probe;
+          let bestAbs = Math.abs(emissions[probe]! - t);
+          const lo = Math.max(0, probe - 2);
+          const hi = Math.min(points.length - 1, probe + 2);
+          for (let j = lo; j <= hi; j++) {
+            const d = Math.abs(emissions[j]! - t);
+            if (d < bestAbs) {
+              bestAbs = d;
+              best = j;
             }
-            break;
           }
-          default:
-            break;
+          return best;
+        };
+
+        const iPlay = nearestFrameIndex(audioTime);
+        const ampNow = amplitudes[iPlay]!;
+
+        const litSet = new Set<number>();
+        const pointIntensities = new Map<number, number>();
+        let maxIntensity = 0;
+
+        const considerLit = (idx: number, weight: number) => {
+          const a = amplitudes[idx]! * weight;
+          if (a <= ampLitFloor * 0.45) return;
+          litSet.add(idx);
+          pointIntensities.set(idx, Math.max(pointIntensities.get(idx) ?? 0, a));
+          maxIntensity = Math.max(maxIntensity, pointIntensities.get(idx)!);
+        };
+
+        if (ampNow > ampLitFloor * 0.85) {
+          considerLit(iPlay, 1);
+          for (let back = 1; back <= 6; back++) {
+            const j = iPlay - back;
+            if (j < 0) break;
+            const age = audioTime - emissions[j]!;
+            if (age <= 0) break;
+            const w = Math.pow(1 - Math.min(age / DECAY_SEC, 1), 2.4);
+            if (w < 0.06) break;
+            considerLit(j, w);
+          }
         }
+
+        const masterFade = Math.min(1, maxIntensity * 2.6);
 
         const posAttr = pointsGeometry.getAttribute("position") as THREE.BufferAttribute;
         const colorAttr = pointsGeometry.getAttribute("color") as THREE.BufferAttribute;
         const lineAttr = lineGeometry.getAttribute("position") as THREE.BufferAttribute;
         const lineColorAttr = lineGeometry.getAttribute("color") as THREE.BufferAttribute;
 
-        const litSet = new Set<number>();
-        for (let k = 0; k < litCount; k++) litSet.add(chain[k]!);
-
-        const breathe = Math.sin(now * 0.0022) * 0.04;
-
         for (let i = 0; i < points.length; i++) {
           const bx = basePos[i * 3]!;
           const by = basePos[i * 3 + 1]!;
           const bz = basePos[i * 3 + 2]!;
-          if (litSet.has(i)) {
-            const amp = amplitudes[i]!;
-            const wob = breathe * (0.5 + amp);
-            posAttr.setXYZ(i, bx + wob, by + wob * 0.6, bz - wob * 0.4);
-          } else {
-            posAttr.setXYZ(i, bx, by, bz);
-          }
+          posAttr.setXYZ(i, bx, by, bz);
 
           const c = enrichChirpRgb(freqToColor(freqs[i]!));
           const amp = amplitudes[i]!;
@@ -347,14 +411,15 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
         posAttr.needsUpdate = true;
         colorAttr.needsUpdate = true;
 
-        const segCount = litCount >= 2 ? litCount - 1 : 0;
-        for (let s = 0; s < segCount; s++) {
-          const ia = chain[s]!;
-          const ib = chain[s + 1]!;
+        let segCount = 0;
+        for (let i = 0; i < points.length - 1 && segCount < allocSegs; i++) {
+          const ia = i;
+          const ib = i + 1;
+          if (!litSet.has(ia) || !litSet.has(ib)) continue;
           const oa = ia * 3;
           const ob = ib * 3;
-          const v0 = s * 2;
-          const v1 = s * 2 + 1;
+          const v0 = segCount * 2;
+          const v1 = segCount * 2 + 1;
           lineAttr.setXYZ(
             v0,
             posAttr.array[oa] as number,
@@ -372,17 +437,23 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
           const e = masterFade * 1.55;
           lineColorAttr.setXYZ(v0, cA.r * e, cA.g * e, cA.b * e);
           lineColorAttr.setXYZ(v1, cB.r * e, cB.g * e, cB.b * e);
+          segCount++;
         }
         lineGeometry.setDrawRange(0, segCount > 0 ? segCount * 2 : 0);
         lineAttr.needsUpdate = true;
         lineColorAttr.needsUpdate = true;
         lineMaterial.opacity = 0.7 * Math.max(0.1, masterFade);
 
+        const litArray = Array.from(litSet).sort((a, b) => {
+          if (a === iPlay) return -1;
+          if (b === iPlay) return 1;
+          return emissions[a]! - emissions[b]!;
+        });
         for (let j = 0; j < labels.length; j++) {
           const el = labelEls[j]!;
           const obj = labels[j]!;
-          if (j < litCount && masterFade > 0.02) {
-            const idx = chain[j]!;
+          if (j < litArray.length && masterFade > 0.02) {
+            const idx = litArray[j]!;
             const oa = idx * 3;
             const amp = amplitudes[idx]!;
             const tEm = emissions[idx]!;
@@ -392,19 +463,19 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
               (posAttr.array[oa + 1] as number) + 0.15,
               posAttr.array[oa + 2] as number
             );
-            el.querySelector(".embedding-viz__label__amp")!.textContent = amp.toFixed(4);
-            el.querySelector(".embedding-viz__label__t")!.textContent = tEm.toFixed(2);
+            const ampNorm = maxAmpAll > 1e-8 ? amp / maxAmpAll : amp;
+            const life = Math.max(0, audioTime - tEm);
+            el.querySelector(".embedding-viz__label__amp")!.textContent = ampNorm.toFixed(4);
+            el.querySelector(".embedding-viz__label__t")!.textContent =
+              `${tEm.toFixed(2)}s · life ${life.toFixed(2)}s`;
             el.setAttribute("title", `${(freq / 1000).toFixed(2)} kHz`);
             const vis = masterFade;
             el.style.opacity = String(0.25 + vis * 0.75);
             el.style.setProperty("--label-glow", String(0.4 + vis * 0.8));
             el.style.transform = `scale(${0.92 + vis * 0.12})`;
-            el.classList.toggle("embedding-viz__label--young", narrative.phase === "lighting");
           } else {
-            const ghost = j < chain.length ? 0.018 : 0.004;
-            el.style.opacity = String(ghost);
+            el.style.opacity = String(0.004);
             el.style.transform = "scale(0.86)";
-            el.classList.remove("embedding-viz__label--young");
           }
         }
 
@@ -416,8 +487,36 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
 
       const rootTag = mount.parentElement?.querySelector(".embedding-viz-stats") as HTMLElement | null;
       if (rootTag) {
-        rootTag.textContent = `${points.length} frames · ${chains.length} chirp${chains.length === 1 ? "" : "s"} · chain up to ${maxChain} nodes`;
+        rootTag.textContent = `${points.length} frames · ≤${totalDur.toFixed(1)}s analyzed · RMS-gated playhead`;
       }
+
+      const audio = new Audio();
+      audioRef.current = audio;
+      audio.loop = true;
+      audio.volume = 0.7;
+      playbackObjectUrl = URL.createObjectURL(
+        audioFile ?? syntheticAudioToWavBlob(seed)
+      );
+      if (!alive) {
+        URL.revokeObjectURL(playbackObjectUrl);
+        playbackObjectUrl = null;
+        return;
+      }
+      audio.src = playbackObjectUrl;
+
+      const tryPlay = () => {
+        void audio.play().catch(() => {
+          /* autoplay policy — first click on the stage starts audio */
+        });
+      };
+      tryPlay();
+      mount.addEventListener(
+        "click",
+        () => {
+          tryPlay();
+        },
+        { once: true }
+      );
     };
 
     setup();
@@ -440,6 +539,16 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       if (labelRenderer?.domElement.parentNode === mount) {
         mount.removeChild(labelRenderer.domElement);
       }
+      if (playbackObjectUrl) {
+        URL.revokeObjectURL(playbackObjectUrl);
+        playbackObjectUrl = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current.removeAttribute("src");
+        audioRef.current = null;
+      }
     };
   }, [seed, audioFile]);
 
@@ -448,7 +557,7 @@ export function BirdSoundEmbeddingViz({ seed, audioFile }: BirdSoundEmbeddingViz
       ref={mountRef}
       className="embedding-viz"
       role="img"
-      aria-label="Three-dimensional visualization: each bird chirp lights a chain of markers along time, then the chain fades away."
+      aria-label="Bird audio visualization: playback lights one analysis frame near the clock—the color and glow match that frames frequency and amplitude during chirps."
     />
   );
 }

@@ -77,13 +77,6 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
         <canvas ref={setCanvasEl} className="result-card__canvas" aria-hidden />
       </div>
       <div className="result-card__actions">
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={() => navigate(`/viz/${result.id}`)}
-        >
-          Embedding
-        </button>
         <button type="button" className="btn btn--ghost" onClick={handleCompare}>
           Compare slot
         </button>

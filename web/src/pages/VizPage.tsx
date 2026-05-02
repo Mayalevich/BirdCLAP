@@ -10,8 +10,27 @@ const BirdSoundEmbeddingViz = lazy(async () => {
 
 export function VizPage() {
   const { id } = useParams<{ id: string }>();
-  const result = id ? getResultById(id) : undefined;
   const { uploadedFile } = useAppPreferences();
+  const isUploadRoute = id === "upload";
+  const result = id && !isUploadRoute ? getResultById(id) : undefined;
+
+  const seed =
+    isUploadRoute && uploadedFile
+      ? `upload:${uploadedFile.name}:${uploadedFile.lastModified}`
+      : result
+        ? `${result.id}:${result.recordingId}`
+        : "";
+
+  /** Upload route requires a file in context; `/viz/:id` can still render with synthetic audio only. */
+  const showViz = isUploadRoute ? Boolean(uploadedFile) : Boolean(result);
+
+  let emptyMessage: string | null = null;
+  if (isUploadRoute && !uploadedFile) {
+    emptyMessage =
+      "No uploaded file in memory. Choose audio on Query or Home, then open Visualization.";
+  } else if (!isUploadRoute && id && !result) {
+    emptyMessage = "Unknown recording id.";
+  }
 
   return (
     <div className="page viz-page">
@@ -19,22 +38,27 @@ export function VizPage() {
         <Link to="/query">← Back to query</Link>
       </p>
       <header className="page-header">
-        <h1>Temporal embedding view</h1>
+        <h1>Visualization</h1>
         <p className="muted">
-          Frame-wise descriptors (≈60&nbsp;Hz) projected into a fixed 3-D layout. Chirp-aligned
-          sequences are highlighted for qualitative review; no model weights are shipped in this
-          prototype.
+          Amplitude sampled at ≈60&nbsp;Hz; color reflects the dominant band (~2–8&nbsp;kHz),
+          brightness the level—grounded on your uploaded clip below. Click the stage if playback
+          does not start.
         </p>
       </header>
 
-      {result ? (
+      {showViz ? (
         <>
           <div className="viz-sound-stack">
             <div className="viz-sound-panel viz-sound-panel--stage">
               <div className="embedding-viz-topline">
                 <span className="embedding-viz-stats">Preparing stream…</span>
                 <span className="embedding-viz-source">
-                  Source: {uploadedFile ? `uploaded file (${uploadedFile.name})` : "synthetic fallback"}
+                  Source:{" "}
+                  {uploadedFile
+                    ? `upload (${uploadedFile.name})`
+                    : isUploadRoute
+                      ? "—"
+                      : "synthetic timeline (no upload)"}
                 </span>
               </div>
               <Suspense
@@ -44,26 +68,30 @@ export function VizPage() {
                   </div>
                 }
               >
-                <BirdSoundEmbeddingViz seed={`${result.id}:${result.recordingId}`} audioFile={uploadedFile} />
+                <BirdSoundEmbeddingViz seed={seed} audioFile={uploadedFile} />
               </Suspense>
             </div>
-            <footer className="viz-sound-species-card">
-              <img
-                className="viz-sound-species-card__thumb"
-                src={result.imageUrl}
-                alt=""
-                width={80}
-                height={80}
-                loading="lazy"
-              />
-              <div className="viz-sound-species-card__meta">
-                <div className="viz-sound-species-card__title">{result.commonName}</div>
-                <div className="viz-sound-species-card__sci muted">{result.scientificName}</div>
-                <div className="viz-sound-species-card__rec small muted">
-                  Recording {result.recordingId} · {result.vocalizationType}
+            {result ? (
+              <footer className="viz-sound-species-card">
+                <img
+                  className="viz-sound-species-card__thumb"
+                  src={result.imageUrl}
+                  alt=""
+                  width={80}
+                  height={80}
+                  loading="lazy"
+                />
+                <div className="viz-sound-species-card__meta">
+                  <div className="viz-sound-species-card__title">{result.commonName}</div>
+                  <div className="viz-sound-species-card__sci muted">{result.scientificName}</div>
+                  <div className="viz-sound-species-card__rec small muted">
+                    Recording {result.recordingId} · {result.vocalizationType}
+                  </div>
                 </div>
-              </div>
-            </footer>
+              </footer>
+            ) : (
+              <footer className="viz-upload-footer muted small">{uploadedFile!.name}</footer>
+            )}
           </div>
           <section className="viz-data-guide">
             <h2>Data for each point</h2>
@@ -77,17 +105,19 @@ export function VizPage() {
               <span>8 kHz</span>
             </div>
             <p className="small muted">
-              Color = dominant frequency band at each frame · Numbers = amplitude and time for the lit chain only ·
-              The view starts empty; each detected chirp lights a chain along time, then it fades away.
+              <strong>Top number</strong> = signal amplitude for that frame, scaled 0–1 to the clip peak ·{" "}
+              <strong>Second line</strong> = emission time in seconds (t&nbsp;=&nbsp;0 at clip start) and{" "}
+              <em>life</em> = seconds since that emission · <strong>Color</strong> = loudest band (~2–8&nbsp;kHz) at
+              that instant · Click the stage if audio does not auto-start.
             </p>
           </section>
           <p className="muted small viz-page__hint">
-            Drag to orbit · scroll to zoom · right-drag to pan. Nothing is shown until a chirp; then squares light in
-            sequence along the chain and slowly disappear before the next chirp.
+            Drag to orbit · scroll to zoom · right-drag to pan. One marker tracks the clock: dominant band and level;
+            silence stays dark; short decay only.
           </p>
         </>
       ) : (
-        <p className="muted">Unknown recording id.</p>
+        <p className="muted">{emptyMessage}</p>
       )}
     </div>
   );

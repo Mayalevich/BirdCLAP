@@ -27,7 +27,7 @@ export function AppShell() {
           </span>
           <div className="app-shell__brand-text">
             <span className="app-shell__title">Bird audio analysis</span>
-            <span className="app-shell__subtitle">Client-side prototype · mock catalog</span>
+            <span className="app-shell__subtitle">CLAP-powered bird call classifier</span>
           </div>
         </div>
         <nav className="app-shell__nav" aria-label="Main">
@@ -68,7 +68,7 @@ export function AppShell() {
       </main>
       <footer className="app-shell__footer">
         <span className="app-shell__footer-note">
-          For demonstration: embeddings and search results are simulated in the browser.
+          Real-time bird call classification using fine-tuned CLAP embeddings.
         </span>
       </footer>
     </div>
