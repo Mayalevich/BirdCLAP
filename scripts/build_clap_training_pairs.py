@@ -39,6 +39,7 @@ Usage:
 
 import argparse
 import json
+import math
 import random
 from pathlib import Path
 
@@ -59,6 +60,67 @@ SKIP_NAMES = frozenset({
 SKIP_TYPES = frozenset({"uncertain", "various", "various calls", "nan", ""})
 
 MIN_CLIPS_PER_COMBO = 3   # combos below this threshold add no multi-positive signal
+DEFAULT_QUALITY_MIN = 4       # XC quality_rating; §10 doc — disable with --quality-min 0
+MIN_CLIPS_COMBO_LEVEL_VAL = 5 # combos with ≥ this many clips donate 3 clips to val (§9 doc)
+
+
+def recording_context_suffix(row: pd.Series, duration_s: float | None = None) -> str:
+    """Per-recording text suffix using whatever columns exist in the metadata row."""
+    parts: list[str] = []
+    for col in ("country", "recording_month", "month", "time_of_day",
+                "habitat", "recording_location"):
+        if col in row.index and pd.notna(row[col]) and str(row[col]).strip():
+            v = str(row[col]).strip()
+            if col in ("country", "recording_location"):
+                parts.append(f"recorded in {v}")
+            elif col in ("recording_month", "month"):
+                parts.append(f"in {v}")
+            elif col == "time_of_day":
+                parts.append(f"at {v}")
+            elif col == "habitat":
+                parts.append(f"in {v}")
+
+    ds = duration_s
+    try:
+        if ds is None and "duration" in row.index:
+            dv = row["duration"]
+            if pd.notna(dv):
+                ds = float(dv)
+    except (TypeError, ValueError):
+        ds = ds
+
+    if ds is not None and math.isfinite(float(ds)):
+        sec = float(ds)
+        if sec < 15:
+            parts.append("(under 15s clip)")
+        elif sec < 45:
+            parts.append("(15–45s clip)")
+        elif sec < 120:
+            parts.append("(45s–2m clip)")
+        else:
+            parts.append("(long recording)")
+
+    if "source" in row.index and pd.notna(row["source"]) and str(row["source"]).strip():
+        parts.append(f"source: {str(row['source']).strip()}")
+    elif "species_code" in row.index and pd.notna(row.get("species_code")):
+        parts.append(f"xc:{str(row['species_code']).strip()}")
+
+    if not parts:
+        return ""
+    return " " + ", ".join(parts)
+
+
+def append_jitter_if_rich(labels_for_combo: list[str], filepath: str, rich_jitter_map: dict) -> list[str]:
+    """Append per-recording context only to rich acoustic variants — not taxonomy templates."""
+    jit = rich_jitter_map.get(filepath)
+    if not jit:
+        return labels_for_combo
+
+    out: list[str] = []
+    for i, s in enumerate(labels_for_combo):
+        rich = i >= 5 or (len(s.split()) >= 12 and " > " not in s)
+        out.append(s + jit if rich else s)
+    return out
 
 
 def build_pairs(metadata_paths: list[str],
@@ -68,7 +130,9 @@ def build_pairs(metadata_paths: list[str],
                 min_clips_per_combo: int,
                 top_n_species: int | None,
                 seed: int,
-                holdout_species: set[str] | None = None) -> tuple[list[dict], list[tuple[str, str]]]:
+                holdout_species: set[str] | None = None,
+                quality_min: int = DEFAULT_QUALITY_MIN,
+                ) -> tuple[list[dict], list[dict], dict[str, list[str]]]:
     """
     For each audio file, look up its (species, voc_type) key in labels and
     emit one {audio, text, combo} pair per text variant.
@@ -80,9 +144,8 @@ def build_pairs(metadata_paths: list[str],
         the first pass (they add no multi-positive signal).
       - max_per_combo cap: applied per combo to limit class imbalance.
 
-    Returns (all_pairs, accepted_clips).
-    holdout_species: if provided, these species are routed to a separate
-    holdout dict instead of the main combo_clips.
+    Returns ``(train_pairs, val_pairs)`` with combo-level validation split + per-recording
+    suffixes on rich text. holdout clips are emitted separately via ``holdout_clips``.
     """
     rng = random.Random(seed)
     if holdout_species is None:
@@ -106,6 +169,7 @@ def build_pairs(metadata_paths: list[str],
     # First pass: collect all valid clips per combo (respecting cap)
     combo_clips: dict[str, list[str]] = {}
     holdout_clips: dict[str, list[str]] = {}   # clips from held-out species
+    recording_suffix: dict[str, str] = {}
 
     for path in metadata_paths:
         p = Path(path)
@@ -130,6 +194,14 @@ def build_pairs(metadata_paths: list[str],
 
             if name.lower() in SKIP_NAMES or not fpath or fpath == "nan":
                 continue
+
+            if quality_min and quality_min > 0:
+                qr = row.get("quality_rating", None)
+                try:
+                    if qr is not None and int(float(qr)) < quality_min:
+                        continue
+                except (TypeError, ValueError):
+                    pass
 
             # Birds only
             tax_class = tax_db.get(name, {}).get("class", "")
@@ -156,8 +228,21 @@ def build_pairs(metadata_paths: list[str],
                 holdout_clips.setdefault(key, []).append(fpath)
                 continue
 
+            dur_sec: float | None = None
+            if "duration" in row.index and pd.notna(row["duration"]):
+                try:
+                    dur_sec = float(row["duration"])
+                except (TypeError, ValueError):
+                    dur_sec = None
+
+            sfx = recording_context_suffix(row, duration_s=dur_sec)
+            if fpath not in recording_suffix:
+                recording_suffix[fpath] = sfx or ""
+
             clips = combo_clips.setdefault(key, [])
-            if len(clips) < max_per_combo:
+            if len(clips) >= max_per_combo:
+                continue
+            if fpath not in clips:
                 clips.append(fpath)
 
     # Second pass: drop combos below the minimum clip threshold
@@ -167,22 +252,43 @@ def build_pairs(metadata_paths: list[str],
     combo_clips = {k: v for k, v in combo_clips.items() if len(v) >= min_clips_per_combo}
     print(f"  Combos after filter           : {len(combo_clips)}")
 
-    accepted: list[tuple[str, str]] = [
-        (fpath, key)
-        for key, clips in combo_clips.items()
-        for fpath in clips
-    ]
-    rng.shuffle(accepted)
+    # Partition clips — combos with fewer than MIN_CLIPS_COMBO_LEVEL_VAL stay train-only.
+    train_paths: set[str] = set()
+    val_paths: set[str] = set()
+    for _, clips in combo_clips.items():
+        paths = list(clips)
+        rng.shuffle(paths)
+        if len(paths) >= MIN_CLIPS_COMBO_LEVEL_VAL:
+            val_paths.update(paths[:3])
+            train_paths.update(paths[3:])
+        else:
+            train_paths.update(paths)
 
-    # Expand each clip into one pair per text variant.
-    # "combo" field lets train_clap.py build a multi-positive mask so clips
-    # from the same species+type are not penalised as negatives of each other.
-    all_pairs: list[dict] = []
-    for fpath, key in accepted:
-        for text in labels[key]:
-            all_pairs.append({"audio": fpath, "text": text, "combo": key})
+    def expand_for_paths(paths: set[str]) -> list[dict]:
+        out: list[dict] = []
+        for key, clips in combo_clips.items():
+            variant_texts = labels.get(key)
+            if not variant_texts:
+                continue
+            for fpath in clips:
+                if fpath not in paths:
+                    continue
+                jittered = append_jitter_if_rich(
+                    list(variant_texts),
+                    fpath,
+                    recording_suffix,
+                )
+                for text in jittered:
+                    out.append({"audio": fpath, "text": text, "combo": key})
+        return out
 
-    return all_pairs, accepted, holdout_clips
+    train_pairs = expand_for_paths(train_paths)
+    val_pairs   = expand_for_paths(val_paths)
+    print(
+        f"  Combo-level split: >={MIN_CLIPS_COMBO_LEVEL_VAL} clips -> 3 val; else train-only"
+    )
+
+    return train_pairs, val_pairs, holdout_clips
 
 
 def main():
@@ -192,8 +298,16 @@ def main():
     parser.add_argument("--taxonomy",  default=str(TAXONOMY_PATH))
     parser.add_argument("--train-out", default=str(TRAIN_OUT))
     parser.add_argument("--val-out",   default=str(VAL_OUT))
-    parser.add_argument("--max-per-combo", type=int, default=50,
-                        help="Max audio clips per (species, type) combo (default 50)")
+    parser.add_argument("--max-per-combo", type=int, default=200,
+                        help="Max audio clips per (species, type) combo (default 200; doc §10)")
+    parser.add_argument(
+        "--quality-min",
+        type=int,
+        default=DEFAULT_QUALITY_MIN,
+        metavar="RATING",
+        help="Skip rows with quality_rating below this (default 4). "
+             "Set 0 to disable quality filtering.",
+    )
     parser.add_argument("--min-clips-per-combo", type=int, default=MIN_CLIPS_PER_COMBO,
                         help=f"Drop combos with fewer than this many clips (default {MIN_CLIPS_PER_COMBO})")
     parser.add_argument("--top-n-species", type=int, default=None,
@@ -203,7 +317,8 @@ def main():
                              "(default 0.2). Their clips are written to clap_holdout_pairs.json.")
     parser.add_argument("--holdout-out", default=str(HOLDOUT_OUT))
     parser.add_argument("--val-split", type=float, default=0.1,
-                        help="Fraction of clips held out for validation (default 0.1)")
+                        help="Deprecated -- ignored; val clips come from combos with "
+                             ">=5 clips (3 val each). Left for backwards CLI compatibility.")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
@@ -244,25 +359,24 @@ def main():
               f"({100*len(holdout_species)/max(len(all_species),1):.1f}%) "
               f"— excluded from train/val, written to {args.holdout_out}")
 
-    all_pairs, accepted_clips, holdout_clips = build_pairs(
-        args.metadata, labels, tax_db,
-        args.max_per_combo, args.min_clips_per_combo, args.top_n_species,
-        args.seed, holdout_species=holdout_species,
+    train, val, holdout_clips = build_pairs(
+        args.metadata,
+        labels,
+        tax_db,
+        args.max_per_combo,
+        args.min_clips_per_combo,
+        args.top_n_species,
+        args.seed,
+        holdout_species=holdout_species,
+        quality_min=max(0, args.quality_min),
     )
 
-    n_clips   = len(accepted_clips)
-    n_val_clips = max(1, int(n_clips * args.val_split))
-    n_train_clips = n_clips - n_val_clips
+    n_train_clips = len({p["audio"] for p in train})
+    n_val_clips   = len({p["audio"] for p in val})
+    n_clips       = n_train_clips + n_val_clips
 
-    print(f"Total unique clips: {n_clips}  "
-          f"(train: {n_train_clips}, val: {n_val_clips})")
-
-    # Split at the clip level, then expand to pairs
-    # accepted_clips is already shuffled; first n_val_clips go to val
-    val_clip_set = set(fpath for fpath, _ in accepted_clips[:n_val_clips])
-
-    train = [p for p in all_pairs if p["audio"] not in val_clip_set]
-    val   = [p for p in all_pairs if p["audio"]     in val_clip_set]
+    print(f"Total unique clips: {n_clips:,} "
+          f"(train: {n_train_clips:,}, val: {n_val_clips:,})")
 
     train_path = Path(args.train_out)
     val_path   = Path(args.val_out)

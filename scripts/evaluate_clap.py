@@ -89,6 +89,7 @@ DEFAULT_FIGURES       = Path("results/figures")
 AUDIO_SR              = 48_000
 CLIP_SECONDS          = 10
 MIN_DURATION_S        = 0.5  # match scripts/train_clap.py
+EVAL_N_AUDIO_CROPS    = 3      # evenly spaced crops; max sim at retrieval time
 STRATEGY_ORDER        = ["name", "scientific", "chain", "sci_common", "chain_common",
                          "rich", "rich_holdout", "all_variants"]
 STRATEGY_LABELS       = {
@@ -145,6 +146,50 @@ def load_audio(path: Path, sr: int = AUDIO_SR, clip_s: float = CLIP_SECONDS):
     return y.astype(np.float32)
 
 
+def load_audio_evaluation_crops(
+    path: Path,
+    n_crops: int = EVAL_N_AUDIO_CROPS,
+    sr: int = AUDIO_SR,
+    clip_s: float = CLIP_SECONDS,
+) -> list[np.ndarray]:
+    """Up to ``n_crops`` evenly spaced 10 s windows — max-sim pooling at eval time."""
+    import librosa
+    import soundfile as sf
+
+    target_len = int(clip_s * sr)
+    min_len = int(MIN_DURATION_S * sr)
+    wav_path = path.with_suffix(".wav")
+
+    def _finalize(y_mono: np.ndarray) -> list[np.ndarray] | None:
+        if len(y_mono) < min_len:
+            return None
+        y_mono = y_mono.astype(np.float32)
+        if len(y_mono) < target_len:
+            y_mono = np.pad(y_mono, (0, target_len - len(y_mono)))
+            return [y_mono]
+        if len(y_mono) == target_len:
+            return [y_mono]
+        starts = np.linspace(0, len(y_mono) - target_len, n_crops, dtype=int)
+        return [y_mono[int(s) : int(s) + target_len].copy() for s in starts]
+
+    if wav_path.is_file():
+        try:
+            y, file_sr = sf.read(str(wav_path), dtype="float32", always_2d=False)
+            if file_sr != sr:
+                y = librosa.resample(y.astype(np.float32), orig_sr=file_sr, target_sr=sr)
+            return _finalize(np.asarray(y, dtype=np.float32).reshape(-1)) or []
+        except Exception:
+            pass
+
+    try:
+        y, _ = librosa.load(str(path), sr=sr, mono=True)
+    except Exception as e:
+        print(f"  [audio error] {path}: {e}")
+        return []
+    out = _finalize(np.asarray(y, dtype=np.float32).reshape(-1))
+    return out if out else []
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Embedding helpers
 # ─────────────────────────────────────────────────────────────────────────────
@@ -180,6 +225,17 @@ def encode_text_batch(texts, processor, model, device):
     return F.normalize(feat.pooler_output, dim=-1).cpu()
 
 
+def text_queries_to_maxcrop_similarity(text_matrix: np.ndarray, audio_matrix: np.ndarray) -> np.ndarray:
+    """
+    text_matrix: (n_queries, D)
+    audio_matrix: (n_gallery, D) or (n_gallery, n_crops, D) multi-crop gallery.
+    Returns (n_queries, n_gallery) cosine similarity after max over crops when applicable.
+    """
+    if audio_matrix.ndim == 2:
+        return text_matrix @ audio_matrix.T
+    return np.einsum("qd,gcd->qgc", text_matrix, audio_matrix).max(axis=-1)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Retrieval metrics
 # ─────────────────────────────────────────────────────────────────────────────
@@ -202,6 +258,11 @@ def retrieval_metrics(sim_row: np.ndarray,
     for k in range(1, max_k + 1):
         hits = sum(1 for idx in ranked[:k] if idx in pos_set)
         recall_at_k[k] = hits / n_pos
+
+    # Standard retrieval Hit@k (binary: any positive in top-k); kept alongside recall_at_k.
+    hit_at_k = {}
+    for k in range(1, max_k + 1):
+        hit_at_k[k] = 1 if any(idx in pos_set for idx in ranked[:k]) else 0
 
     # MRR
     mrr = 0.0
@@ -239,6 +300,7 @@ def retrieval_metrics(sim_row: np.ndarray,
         "mAP": ap,
         "MRR": mrr,
         "recall_at_k": recall_at_k,
+        "hit_at_k": hit_at_k,
         "first_hit_rank": first_hit_rank,
         "median_pos_rank": median_pos_rank,
         "pos_sims": pos_sims,
@@ -342,35 +404,43 @@ def load_model(checkpoint, base_model, device):
 
 def encode_gallery(model, processor, val_clips, audio_root, device, batch_size=16):
     """
-    Encode all val audio clips to normalised embeddings once.
-    Call this once per model and pass the result to run_eval / semantic evals
-    to avoid redundant encoding.
-
-    Returns:
-        audio_matrix : np.ndarray (N, D), L2-normalised
-        valid_clips  : list[str] — clips that loaded successfully (same order)
+    Encode each val clip from several evenly spaced crops; stacking shape (N, n_crops, D).
+    Retrieval max-pools over crops (same as Maseeh doc §7). Short clips contribute one crop.
     """
-    print(f"\n  Encoding {len(val_clips)} val audio clips ...")
-    audio_embs, failed = [], []
-    for i in range(0, len(val_clips), batch_size):
-        batch_paths = val_clips[i : i + batch_size]
-        wavs = []
-        for p in batch_paths:
-            wav = load_audio(audio_root / p)
-            if wav is not None:
-                wavs.append(wav)
-            else:
-                failed.append(p)
-        if wavs:
-            audio_embs.append(encode_audio_batch(wavs, processor, model, device))
-        if (i // batch_size) % 10 == 0:
-            print(f"    {min(i + batch_size, len(val_clips))}/{len(val_clips)}", end="\r")
+    print(f"\n  Encoding {len(val_clips)} val clips "
+          f"(≤{EVAL_N_AUDIO_CROPS} crops each where possible) ...")
+    mats: list[np.ndarray] = []
+    valid_clips: list[str] = []
+    failed: list[str] = []
+
+    for ci, clip in enumerate(val_clips):
+        crops = load_audio_evaluation_crops(audio_root / clip, EVAL_N_AUDIO_CROPS)
+        if not crops:
+            failed.append(clip)
+            continue
+        parts: list[np.ndarray] = []
+        for j in range(0, len(crops), batch_size):
+            chunk = crops[j : j + batch_size]
+            parts.append(encode_audio_batch(chunk, processor, model, device).numpy())
+        emb = np.concatenate(parts, axis=0).astype(np.float32)
+        mats.append(emb)
+        valid_clips.append(clip)
+        if ci % max(1, len(val_clips) // 20) == 0:
+            print(f"    {ci + 1}/{len(val_clips)}", end="\r")
+
     if failed:
-        print(f"\n  [warn] {len(failed)} clips failed to load - excluded")
-    valid_clips = [c for c in val_clips if c not in set(failed)]
+        print(f"\n  [warn] {len(failed)} clips failed — excluded")
+    if not mats:
+        return np.zeros((0, EVAL_N_AUDIO_CROPS, 1), dtype=np.float32), []
+    max_c = max(m.shape[0] for m in mats)
+    d_dim = mats[0].shape[1]
+    out = np.zeros((len(mats), max_c, d_dim), dtype=np.float32)
+    for mi, m in enumerate(mats):
+        out[mi, : m.shape[0]] = m
     print(f"\n  Audio encoding done. ({len(valid_clips)} clips)")
-    audio_matrix = torch.cat(audio_embs, dim=0).numpy()
-    return audio_matrix, valid_clips
+    if max_c <= 1:
+        return out[:, 0, :], valid_clips
+    return out, valid_clips
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -433,7 +503,7 @@ def run_eval(model, processor, val_clips, clip_to_combo,
             combo_embs.append(F.normalize(mean_emb, dim=0))
             offset += n
         text_matrix = torch.stack(combo_embs).numpy()   # (n_combos, D)
-        sim_matrix  = text_matrix @ audio_matrix.T
+        sim_matrix = text_queries_to_maxcrop_similarity(text_matrix, audio_matrix)
 
         per_combo, all_pos_sims, all_neg_sims = [], [], []
         n_gallery = len(valid_clips)
@@ -445,6 +515,7 @@ def run_eval(model, processor, val_clips, clip_to_combo,
                 "mAP":             m["mAP"],
                 "MRR":             m["MRR"],
                 "recall_at_k":     m["recall_at_k"],
+                "hit_at_k":        m["hit_at_k"],
                 "n_positives":     len(combo_to_indices[combo]),
                 "first_hit_rank":  m["first_hit_rank"],
                 "median_pos_rank": m["median_pos_rank"],
@@ -458,6 +529,7 @@ def run_eval(model, processor, val_clips, clip_to_combo,
             a[metric] = float(np.mean([c[metric] for c in per_combo]))
         for k in range(1, 21):
             a[f"R@{k}"] = float(np.mean([c["recall_at_k"][k] for c in per_combo]))
+            a[f"Hit@{k}"] = float(np.mean([c["hit_at_k"][k] for c in per_combo]))
         a["n_queries"]        = len(eval_combos)
         a["median_first_rank"]= float(np.median([c["first_hit_rank"] for c in per_combo]))
         a["mean_first_rank"]  = float(np.mean([c["first_hit_rank"] for c in per_combo]))
@@ -471,7 +543,8 @@ def run_eval(model, processor, val_clips, clip_to_combo,
         sim_data[strategy] = {"pos": all_pos_sims, "neg": all_neg_sims}
 
         print(f"    mAP={a['mAP']:.3f}  MRR={a['MRR']:.3f}  "
-              f"R@1={a['R@1']:.3f}  R@5={a['R@5']:.3f}  R@10={a['R@10']:.3f}  "
+              f"Hit@1={a['Hit@1']:.3f}  R@1(frac)={a['R@1']:.3f}  "
+              f"Hit@5={a['Hit@5']:.3f}  Hit@10={a['Hit@10']:.3f}  "
               f"median_rank={a['median_first_rank']:.0f}/{n_gallery}  "
               f"({a['n_queries']} queries)")
 
@@ -530,7 +603,7 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
     for i in range(0, len(texts), batch_size):
         flat_embs.append(encode_text_batch(texts[i : i + batch_size], processor, model, device))
     text_matrix = torch.cat(flat_embs, dim=0).numpy()   # (n_queries, D)
-    sim_matrix  = text_matrix @ audio_matrix.T           # (n_queries, n_gallery)
+    sim_matrix = text_queries_to_maxcrop_similarity(text_matrix, audio_matrix)
 
     results = []
     for q_idx, probe in enumerate(normalized_queries):
@@ -549,6 +622,7 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
             "mAP":            m["mAP"],
             "MRR":            m["MRR"],
             "recall_at_k":    m["recall_at_k"],
+            "hit_at_k":       m["hit_at_k"],
             "first_hit_rank": m["first_hit_rank"],
         })
 
@@ -560,14 +634,17 @@ def run_semantic_probe(audio_matrix, valid_clips, clip_to_combo,
         "mAP":               float(np.mean([r["mAP"] for r in results])),
         "MRR":               float(np.mean([r["MRR"] for r in results])),
         "R@1":               float(np.mean([r["recall_at_k"][1] for r in results])),
+        "Hit@1":             float(np.mean([r["hit_at_k"][1] for r in results])),
         "R@5":               float(np.mean([r["recall_at_k"][5] for r in results])),
+        "Hit@5":             float(np.mean([r["hit_at_k"][5] for r in results])),
         "R@10":              float(np.mean([r["recall_at_k"][10] for r in results])),
+        "Hit@10":            float(np.mean([r["hit_at_k"][10] for r in results])),
         "median_first_rank": float(np.median(fhr)) if fhr else float(len(valid_clips)),
         "n_queries":         len(results),
     }
     n_gal = len(valid_clips)
     print(f"  [semantic_probe] mAP={summary['mAP']:.3f}  "
-          f"R@1={summary['R@1']:.3f}  R@5={summary['R@5']:.3f}  "
+          f"Hit@1={summary['Hit@1']:.3f}  Hit@5={summary['Hit@5']:.3f}  "
           f"median_rank={summary['median_first_rank']:.0f}/{n_gal}  "
           f"({summary['n_queries']} queries)")
     return results, summary
@@ -735,7 +812,7 @@ def run_cross_species_transfer(audio_matrix, valid_clips, clip_to_combo,
     for i in range(0, len(texts), batch_size):
         flat_embs.append(encode_text_batch(texts[i : i + batch_size], processor, model, device))
     text_matrix = torch.cat(flat_embs, dim=0).numpy()
-    sim_matrix  = text_matrix @ audio_matrix.T
+    sim_matrix = text_queries_to_maxcrop_similarity(text_matrix, audio_matrix)
 
     n_gallery = len(valid_clips)
     results = []
@@ -751,6 +828,7 @@ def run_cross_species_transfer(audio_matrix, valid_clips, clip_to_combo,
             "mAP":             m["mAP"],
             "MRR":             m["MRR"],
             "recall_at_k":     m["recall_at_k"],
+            "hit_at_k":       m["hit_at_k"],
             "first_hit_rank":  m["first_hit_rank"],
         })
 
@@ -761,15 +839,19 @@ def run_cross_species_transfer(audio_matrix, valid_clips, clip_to_combo,
         "mAP":               float(np.mean([r["mAP"] for r in results])),
         "MRR":               float(np.mean([r["MRR"] for r in results])),
         "R@1":               float(np.mean([r["recall_at_k"][1] for r in results])),
+        "Hit@1":             float(np.mean([r["hit_at_k"][1] for r in results])),
         "R@5":               float(np.mean([r["recall_at_k"][5] for r in results])),
+        "Hit@5":             float(np.mean([r["hit_at_k"][5] for r in results])),
         "R@10":              float(np.mean([r["recall_at_k"][10] for r in results])),
+        "Hit@10":            float(np.mean([r["hit_at_k"][10] for r in results])),
         "median_first_rank": float(np.median(fhr)) if fhr else float(n_gallery),
         "random_R@1":        float(random_r1),
         "n_queries":         len(results),
         "n_genera":          n_genera_used,
     }
     print(f"  [cross_species_transfer] "
-          f"R@1={summary['R@1']:.3f} (random={summary['random_R@1']:.4f})  "
+          f"Hit@1={summary['Hit@1']:.3f}  "
+          f"R@1(frac)={summary['R@1']:.3f} (random={summary['random_R@1']:.4f})  "
           f"R@5={summary['R@5']:.3f}  mAP={summary['mAP']:.3f}  "
           f"({summary['n_queries']} pairs, {summary['n_genera']} genera)")
     return results, summary
@@ -1358,9 +1440,15 @@ def main():
         # Include probe per-query results (compact) since there are few queries
         if "semantic_probe_results" in sem:
             semantic_save[mk]["semantic_probe_results"] = [
-                {k2: v2 for k2, v2 in r.items() if k2 != "recall_at_k"}
-                | {"R@1": r["recall_at_k"].get(1), "R@5": r["recall_at_k"].get(5),
-                   "R@10": r["recall_at_k"].get(10)}
+                {k2: v2 for k2, v2 in r.items() if k2 not in ("recall_at_k", "hit_at_k")}
+                | {
+                    "R@1": r["recall_at_k"].get(1),
+                    "R@5": r["recall_at_k"].get(5),
+                    "R@10": r["recall_at_k"].get(10),
+                    "Hit@1": r["hit_at_k"].get(1),
+                    "Hit@5": r["hit_at_k"].get(5),
+                    "Hit@10": r["hit_at_k"].get(10),
+                }
                 for r in sem["semantic_probe_results"]
             ]
 
