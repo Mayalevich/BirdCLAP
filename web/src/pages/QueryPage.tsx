@@ -84,8 +84,8 @@ export function QueryPage() {
       <header className="page-header">
         <h1>Query workspace</h1>
         <p className="muted">
-          Text retrieval against a static mock table, optional upload-driven classification scores,
-          and mock acoustic similarity — all evaluated client-side.
+          Text retrieval using the fine-tuned CLAP model, upload-driven classification scores,
+          and acoustic similarity search — all powered by the backend.
         </p>
       </header>
 
@@ -108,7 +108,7 @@ export function QueryPage() {
           </button>
         </div>
         <p className="muted small">
-          Current mode affects how mock search matches strings (e.g. “Turdus” vs “robin”).
+          Passed as context to the backend search query (e.g. “Turdus” vs “robin”).
         </p>
       </section>
 
