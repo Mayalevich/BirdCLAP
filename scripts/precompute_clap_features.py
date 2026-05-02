@@ -55,6 +55,7 @@ DEFAULT_MODEL    = "laion/clap-htsat-fused"
 TARGET_SR        = 48_000
 CLIP_DURATION_S  = 10.0
 MIN_DURATION_S   = 0.5
+DEFAULT_K_CROPS  = 4
 
 
 def repo_root() -> Path:
@@ -98,10 +99,86 @@ def load_audio(path: Path, sr: int = TARGET_SR, clip_s: float = CLIP_DURATION_S)
     return y.astype(np.float32)
 
 
+def random_crop_starts(n_total: int, target_len: int, k: int) -> list[int]:
+    """Evenly spaced crop starts (beginning, thirds, end) — max K positions."""
+    if n_total <= target_len:
+        return [0] * k
+    max_start = n_total - target_len
+    if k == 1:
+        anchors = [max_start // 2]
+    elif k >= 4:
+        anchors = [0, max_start // 3, (2 * max_start) // 3, max_start]
+    else:
+        anchors = [int(round(i * max_start / (k - 1))) for i in range(k)]
+    return anchors[:k]
+
+
+def load_audio_full(path: Path, sr: int = TARGET_SR) -> np.ndarray | None:
+    """Load entire waveform at target SR (mono), preferring WAV if longer than clipped."""
+    target_len = int(CLIP_DURATION_S * sr)
+    min_len = int(MIN_DURATION_S * sr)
+    wav_path = path.with_suffix(".wav")
+
+    def _finalize(y_arr: np.ndarray) -> np.ndarray | None:
+        if len(y_arr) < min_len:
+            return None
+        return y_arr.astype(np.float32)
+
+    if wav_path.is_file():
+        try:
+            y_w, file_sr = sf.read(str(wav_path), dtype="float32", always_2d=False)
+            if file_sr != sr:
+                try:
+                    y_w = librosa.resample(y_w, orig_sr=file_sr, target_sr=sr)
+                except Exception:
+                    pass
+            y_w = np.asarray(y_w, dtype=np.float32).reshape(-1)
+            if len(y_w) >= target_len:
+                return _finalize(y_w)
+        except Exception:
+            pass
+
+    try:
+        y, _ = librosa.load(str(path), sr=sr, mono=True)
+    except Exception:
+        return None
+    return _finalize(np.asarray(y, dtype=np.float32).reshape(-1))
+
+
+def crop_and_extract(
+    feature_extractor,
+    y_full: np.ndarray,
+    target_len: int,
+    starts: list[int],
+    k_use: int,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    crops = []
+    longer_flags = []
+    for si in starts[:k_use]:
+        seg = (
+            np.pad(y_full, (0, target_len - len(y_full)), mode="constant")
+            if len(y_full) < target_len
+            else y_full[si : si + target_len]
+        )
+        if len(seg) < target_len:
+            seg = np.pad(seg, (0, target_len - len(seg)))
+        feats = feature_extractor(
+            raw_speech=[seg],
+            sampling_rate=TARGET_SR,
+            return_tensors="pt",
+        )
+        crops.append(feats["input_features"].cpu())
+        longer_flags.append(feats["is_longer"].cpu())
+    stacked = torch.cat(crops, dim=0)
+    iso = torch.cat(longer_flags, dim=0)
+    return stacked, iso
+
+
 def compute_one(
     mp3_path: Path,
     feature_extractor,
     force: bool,
+    k_crops: int,
 ) -> tuple[str, str]:
     """
     Compute and save .clap.pt for a single audio file.
@@ -111,19 +188,21 @@ def compute_one(
     if out_path.is_file() and not force:
         return str(mp3_path), "skip"
 
-    audio = load_audio(mp3_path)
-    if audio is None:
+    target_len = int(CLIP_DURATION_S * TARGET_SR)
+    y_full = load_audio_full(mp3_path)
+    if y_full is None:
         return str(mp3_path), "error:load_failed"
 
+    starts = random_crop_starts(len(y_full), target_len, k_crops)
+
     try:
-        feats = feature_extractor(
-            raw_speech     = [audio],
-            sampling_rate  = TARGET_SR,
-            return_tensors = "pt",
+        stacked, iso = crop_and_extract(
+            feature_extractor, y_full, target_len, starts, k_crops
         )
         payload = {
-            "input_features": feats["input_features"].cpu(),
-            "is_longer":      feats["is_longer"].cpu(),
+            "input_features": stacked,
+            "is_longer":      iso,
+            "n_crops":        k_crops,
         }
         torch.save(payload, str(out_path))
     except Exception as exc:
@@ -172,6 +251,16 @@ def main() -> int:
         action="store_true",
         help="Report what would be done without writing files",
     )
+    ap.add_argument(
+        "--k-crops",
+        type=int,
+        default=DEFAULT_K_CROPS,
+        metavar="K",
+        help=(
+            "Number of 10 s mel crops stacked per recording (default 4: start, thirds, end). "
+            "Training randomly picks one per epoch."
+        ),
+    )
     args = ap.parse_args()
 
     audio_root = Path(args.audio_root)
@@ -189,7 +278,7 @@ def main() -> int:
     total   = len(paths)
     already = sum(1 for p in paths if p.with_suffix(".clap.pt").is_file())
     to_do   = total if args.force else (total - already)
-    est_gb  = to_do * 0.256  # ~256 KB each
+    est_gb = to_do * max(1, args.k_crops) * 280 / (1024 ** 3)  # ~280 KB tensor per crop
 
     print(f"Audio root      : {audio_root}")
     print(f"Unique audio    : {total:,}")
@@ -215,7 +304,7 @@ def main() -> int:
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futs = {
-            pool.submit(compute_one, p, feature_extractor, args.force): p
+            pool.submit(compute_one, p, feature_extractor, args.force, args.k_crops): p
             for p in paths
         }
         pbar = tqdm(

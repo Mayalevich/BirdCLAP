@@ -87,6 +87,53 @@ CLIP_DURATION_S  = 10.0            # seconds; long recordings are centre-cropped
 MIN_DURATION_S   = 0.5             # recordings shorter than this are skipped
 
 
+class PKBatchSampler:
+    """P distinct combos × K dataset indices per combo; yields index lists for batch_sampler."""
+
+    def __init__(
+        self,
+        dataset: Dataset,
+        p_classes: int,
+        k_per_class: int,
+        num_batches: int | None,
+        seed: int,
+    ) -> None:
+        self.dataset = dataset
+        self.p = p_classes
+        self.k = k_per_class
+        self.rng = random.Random(seed)
+        self.combo_to_idx: dict[str, list[int]] = {}
+        for i, pair in enumerate(dataset.pairs):
+            c = pair.get("combo", "")
+            if c:
+                self.combo_to_idx.setdefault(c, []).append(i)
+        self.combo_to_idx = {
+            c: ids for c, ids in self.combo_to_idx.items() if len(ids) >= self.k
+        }
+        self.combos = list(self.combo_to_idx.keys())
+        if len(self.combos) < self.p:
+            raise ValueError(
+                f"PKBatchSampler needs ≥{self.p} combos with ≥{self.k} clips each; "
+                f"found {len(self.combos)}. Lower --pk-p/--pk-k or use --no-pk-sampler."
+            )
+        denom = max(self.p * self.k, 1)
+        self.num_batches = (
+            num_batches if num_batches is not None else max(1, len(dataset) // denom)
+        )
+
+    def __iter__(self):
+        for _ in range(self.num_batches):
+            chosen_combos = self.rng.sample(self.combos, self.p)
+            batch: list[int] = []
+            for c in chosen_combos:
+                idxs = self.combo_to_idx[c]
+                batch.extend(self.rng.sample(idxs, self.k))
+            yield batch
+
+    def __len__(self) -> int:
+        return self.num_batches
+
+
 # ── helpers ────────────────────────────────────────────────────────────────────
 
 def repo_root() -> Path:
@@ -121,8 +168,8 @@ def load_audio(path: Path, sr: int = TARGET_SR, clip_s: float = CLIP_DURATION_S,
     if wav_path.is_file():
         try:
             y, file_sr = sf.read(str(wav_path), dtype="float32", always_2d=False)
-            # If the WAV has the right length it's pre-clipped — return immediately.
-            if file_sr == sr and len(y) == target_len:
+            # Pre-clipped WAV: shortcut only without augmentation (augment needs random crops).
+            if file_sr == sr and len(y) == target_len and not augment:
                 return y
             # WAV exists but was not pre-clipped (e.g. older conversion); fall
             # through to the normal path using the WAV instead of MP3.
@@ -325,7 +372,26 @@ class ClapPrecomputedDataset(Dataset):
             feat = torch.load(str(clap_pt), map_location="cpu", weights_only=True)
         except Exception:
             return None
-        feats = feat["input_features"]
+        all_crops = feat["input_features"]
+        all_longer = feat["is_longer"]
+        if all_crops.dim() == 2:
+            feats = all_crops.unsqueeze(0)
+            isl = (
+                all_longer.unsqueeze(0)
+                if isinstance(all_longer, Tensor)
+                else torch.tensor([all_longer])
+            )
+        else:
+            kpick = random.randint(0, all_crops.shape[0] - 1) if self.augment else (
+                all_crops.shape[0] // 2
+            )
+            feats = all_crops[kpick : kpick + 1]
+            isl = (
+                all_longer[kpick : kpick + 1]
+                if isinstance(all_longer, Tensor) and all_longer.dim() > 0
+                else all_longer
+            )
+
         if self.augment:
             feats = spec_augment(feats)
 
@@ -337,7 +403,7 @@ class ClapPrecomputedDataset(Dataset):
         return {
             # keep the batch dim (1, …) — collate_precomputed_fn cats along dim 0
             "input_features": feats,
-            "is_longer":      feat["is_longer"],
+            "is_longer":      isl if isinstance(isl, Tensor) else feat["is_longer"],
             "text":       text,
             "combo":      combo,
             "audio_path": pair["audio"],
@@ -431,6 +497,7 @@ def contrastive_loss(
     combo_weights: dict[str, float] | None = None,
     combo_hard_negs: dict[str, set] | None = None,
     hard_neg_boost: float = 2.0,
+    hard_neg_margin: float = 0.0,
     label_smoothing: float = 0.0,
 ) -> Tensor:
     """
@@ -453,9 +520,10 @@ def contrastive_loss(
     Weights are normalised within the batch to keep the loss scale stable.
 
     combo_hard_negs: {combo: set of same-genus different-species combos}.
-    When provided, logits between hard-negative pairs are boosted by `hard_neg_boost`×
-    before softmax, forcing the model to push confusable species apart harder.
-    Set hard_neg_boost=1.0 to disable the boost while keeping the lookup.
+    When ``hard_neg_margin`` > 0, add that margin (cosine-domain) between hard negatives
+    and the anchor before scaling — preferred formulation (see Maseeh findings doc).
+    If ``hard_neg_margin`` is 0 and ``hard_neg_boost`` ≠ 1, legacy multiplicative
+    logit boost is applied instead.
 
     label_smoothing: blends the per-row soft targets with a uniform distribution
     so no entry ever receives a target of 0 or 1. Reduces overconfidence and
@@ -466,13 +534,15 @@ def contrastive_loss(
     """
     N = len(audio_emb)
     scale  = log_scale.exp().clamp(max=100.0)
-    logits = scale * audio_emb @ text_emb.T   # (N, N)
+    cos_sim = audio_emb @ text_emb.T           # (N, N)
 
     # Fast path: no metadata → standard diagonal CLIP loss
     if not combos or not any(combos):
         labels = torch.arange(N, device=logits.device)
-        return (F.cross_entropy(logits, labels, label_smoothing=label_smoothing)
-                + F.cross_entropy(logits.T, labels, label_smoothing=label_smoothing)) / 2.0
+        logits_plain = scale * cos_sim
+        return (F.cross_entropy(logits_plain, labels, label_smoothing=label_smoothing)
+                + F.cross_entropy(logits_plain.T, labels,
+                                  label_smoothing=label_smoothing)) / 2.0
 
     # Build positive mask on CPU then move to device (small N, negligible cost)
     mask = torch.zeros(N, N)
@@ -482,12 +552,22 @@ def contrastive_loss(
                 mask[i][j] = 1.0
             elif combos[i] and combos[i] == combos[j]:  # same species+type, different clip
                 mask[i][j] = 1.0
-    mask = mask.to(logits.device)
+    mask = mask.to(cos_sim.device)
 
-    # Hard negative boost: same-genus different-species pairs get hard_neg_boost× logit
-    # weight so the model is penalised harder for confusing acoustically similar species.
-    # Set hard_neg_boost=1.0 to disable without removing the genus lookup entirely.
-    if combo_hard_negs is not None and hard_neg_boost != 1.0:
+    if combo_hard_negs is not None and hard_neg_margin > 0.0:
+        margin_m = torch.zeros(N, N, device=cos_sim.device)
+        for i in range(N):
+            hard_set = combo_hard_negs.get(combos[i])
+            if hard_set:
+                for j in range(N):
+                    if combos[j] in hard_set and mask[i, j] == 0:
+                        margin_m[i, j] = hard_neg_margin
+        cos_sim = cos_sim + margin_m
+
+    logits = scale * cos_sim
+
+    # Legacy multiplicative boost (avoid when margin is active — margin supersedes)
+    if combo_hard_negs is not None and hard_neg_margin <= 0.0 and hard_neg_boost != 1.0:
         boost = torch.ones(N, N, device=logits.device)
         for i in range(N):
             hard_set = combo_hard_negs.get(combos[i])
@@ -526,10 +606,10 @@ def contrastive_loss(
     return (loss_a + loss_t) / 2.0
 
 
-# ── retrieval metric ───────────────────────────────────────────────────────────
+# ── retrieval metrics (train-time) ──────────────────────────────────────────
 
 @torch.no_grad()
-def recall_at_1(
+def recall_at_1_in_batch_val(
     model: ClapModel,
     loader: DataLoader,
     processor: ClapProcessor,
@@ -537,12 +617,9 @@ def recall_at_1(
     max_batches: int = 64,
 ) -> float:
     """
-    Audio→text R@1 on a subset of the validation loader.
-
-    A retrieval is counted correct if the top-ranked text comes from the same
-    (species, type) combo as the query audio — not just the exact paired row.
-    This avoids false negatives when two clips of the same species land in the
-    same evaluation window.
+    Legacy notebook metric: Audio -> text top-1 when the candidate set is only
+    texts that appear in up to ``max_batches`` val mini-batches (easy ~1024-way).
+    Log this as **R@1 (in-batch)** so it stays comparable to Runs 6/9/10/11 logs.
     """
     model.eval()
     audio_embs: list[Tensor] = []
@@ -572,22 +649,161 @@ def recall_at_1(
     if not audio_embs:
         return 0.0
 
-    A    = torch.cat(audio_embs)    # (N, D)
-    T    = torch.cat(text_embs)     # (N, D)
-    sims = A @ T.T                  # (N, N)
-    top1 = sims.argmax(dim=-1)      # (N,) — index of highest-scoring text per audio
+    A    = torch.cat(audio_embs)
+    T    = torch.cat(text_embs)
+    sims = A @ T.T
+    top1 = sims.argmax(dim=-1)
 
     if all_combos and len(all_combos) == len(top1):
-        # Correct if top-ranked text shares the same combo as the query audio
         correct = sum(
             all_combos[top1[i].item()] == all_combos[i]
             for i in range(len(top1))
         )
         return correct / len(top1)
+    labels = torch.arange(len(top1))
+    return (top1 == labels).float().mean().item()
+
+
+def _feat_one_precomputed(audio_root: Path, pair: dict[str, str]) -> tuple[Tensor, Tensor] | None:
+    """One mel crop (middle of multi-crop stack) with batch dim, for fast eval."""
+    clap_pt = (audio_root / pair["audio"]).with_suffix(".clap.pt")
+    try:
+        feat = torch.load(str(clap_pt), map_location="cpu", weights_only=True)
+    except Exception:
+        return None
+    all_crops = feat["input_features"]
+    isl_all = feat["is_longer"]
+    if all_crops.dim() == 2:
+        f1 = all_crops.unsqueeze(0)
+        if isinstance(isl_all, Tensor):
+            isl = isl_all.unsqueeze(0) if isl_all.dim() == 0 else isl_all[:1]
+        else:
+            isl = torch.tensor([int(isl_all)], dtype=torch.long)
     else:
-        # Fallback for old pair files without combo info
-        labels = torch.arange(len(top1))
-        return (top1 == labels).float().mean().item()
+        k = all_crops.shape[0] // 2
+        f1 = all_crops[k : k + 1]
+        if isinstance(isl_all, Tensor) and isl_all.dim() > 0:
+            isl = isl_all[k : k + 1]
+        else:
+            isl = torch.zeros(1, dtype=torch.long)
+    return f1, isl
+
+
+@torch.no_grad()
+def fast_eval_hit_at_1(
+    model: ClapModel,
+    val_ds: Dataset,
+    processor: ClapProcessor,
+    device: torch.device,
+    *,
+    audio_root: Path,
+    precomputed: bool,
+    use_amp: bool,
+    n_gallery: int = 256,
+    n_queries: int = 200,
+    seed: int = 0,
+    mini_bs: int = 16,
+) -> float:
+    """
+    Subsampled text→audio retrieval Hit@1 (binary: top gallery clip matches query combo).
+    """
+    model.eval()
+    rng = random.Random(seed)
+
+    combo_to_idx: dict[str, list[int]] = {}
+    for i, pair in enumerate(val_ds.pairs):
+        c = pair.get("combo", "")
+        if c:
+            combo_to_idx.setdefault(c, []).append(i)
+
+    combos_shuffled = list(combo_to_idx.keys())
+    rng.shuffle(combos_shuffled)
+
+    gallery_specs: list[tuple[str, int]] = []
+    seen_clips: set[str] = set()
+    for combo in combos_shuffled:
+        for pi in combo_to_idx[combo]:
+            clip = val_ds.pairs[pi]["audio"]
+            if clip not in seen_clips:
+                seen_clips.add(clip)
+                gallery_specs.append((combo, pi))
+                break
+        if len(gallery_specs) >= n_gallery:
+            break
+
+    if not gallery_specs:
+        return 0.0
+
+    gc_list: list[str] = []
+    gal_embs: list[Tensor] = []
+    for i in range(0, len(gallery_specs), mini_bs):
+        chunk = gallery_specs[i : i + mini_bs]
+        stack_f: list[Tensor] = []
+        stack_i: list[Tensor] = []
+        chunk_c: list[str] = []
+        for combo, pi in chunk:
+            pair = val_ds.pairs[pi]
+            if precomputed:
+                got = _feat_one_precomputed(audio_root, pair)
+                if got is None:
+                    continue
+                f1, isl = got
+            else:
+                wav = load_audio(audio_root / pair["audio"], augment=False)
+                if wav is None:
+                    continue
+                inputs = processor(
+                    audio=wav,
+                    return_tensors="pt",
+                    sampling_rate=TARGET_SR,
+                )
+                f1 = inputs["input_features"]
+                isl = inputs.get("is_longer")
+                if isl is None:
+                    isl = torch.zeros(f1.shape[0], dtype=torch.long, device=f1.device)
+            stack_f.append(f1)
+            stack_i.append(isl)
+            chunk_c.append(combo)
+        if not stack_f:
+            continue
+        inp_f = torch.cat(stack_f, dim=0).to(device, non_blocking=True)
+        inp_i = torch.cat(stack_i, dim=0).to(device, non_blocking=True)
+        with torch.autocast(device.type, enabled=(use_amp and device.type == "cuda")):
+            a_feat = model.get_audio_features(input_features=inp_f, is_longer=inp_i)
+        gal_embs.append(F.normalize(a_feat.pooler_output, dim=-1).cpu())
+        gc_list.extend(chunk_c)
+
+    if not gc_list:
+        return 0.0
+
+    G = torch.cat(gal_embs, dim=0)
+    if G.shape[0] != len(gc_list):
+        return 0.0
+
+    uniq = list(dict.fromkeys(gc_list))
+    nq = min(n_queries, len(uniq))
+    query_combos = rng.sample(uniq, nq)
+    texts = [f"{c.split('||', 1)[0].strip()} {c.split('||', 1)[1].strip()}" for c in query_combos]
+
+    tok = processor.tokenizer(texts, return_tensors="pt", padding=True, truncation=True)
+    q_chunks: list[Tensor] = []
+    for j in range(0, len(texts), mini_bs):
+        tb = {k: v[j : j + mini_bs].to(device, non_blocking=True) for k, v in tok.items()}
+        with torch.autocast(device.type, enabled=(use_amp and device.type == "cuda")):
+            tf = model.get_text_features(
+                input_ids=tb["input_ids"],
+                attention_mask=tb["attention_mask"],
+            )
+        q_chunks.append(F.normalize(tf.pooler_output, dim=-1).cpu())
+
+    Q = torch.cat(q_chunks, dim=0)
+    sims = Q @ G.T
+    top1 = sims.argmax(dim=-1)
+    hits = sum(
+        1 for qi in range(len(query_combos))
+        if gc_list[top1[qi].item()] == query_combos[qi]
+    )
+    return hits / max(len(query_combos), 1)
 
 
 # ── checkpoint helpers ─────────────────────────────────────────────────────────
@@ -663,7 +879,7 @@ class ParetoCheckpointManager:
     Keeps only the Pareto-optimal set of per-epoch snapshots across three metrics:
       - train_loss  (lower is better)
       - val_loss    (lower is better)
-      - R@1         (higher is better)
+      - Hit@1 (fast) (higher is better; metric passed as ``r1`` for backward-compat)
 
     An epoch is saved only if no existing snapshot is at least as good on every
     metric AND strictly better on at least one. When a new epoch dominates older
@@ -806,6 +1022,7 @@ def train_one_epoch(
     combo_hard_negs: dict[str, set] | None = None,
     mixup_alpha: float = 0.0,
     hard_neg_boost: float = 2.0,
+    hard_neg_margin: float = 0.0,
     label_smoothing: float = 0.0,
 ) -> float:
     model.train()
@@ -841,10 +1058,13 @@ def train_one_epoch(
 
             a_emb = F.normalize(audio_feat.pooler_output, dim=-1)
             t_emb = F.normalize(text_feat.pooler_output,  dim=-1)
-            loss  = contrastive_loss(a_emb, t_emb, model.logit_scale_a, combos, paths,
-                                     combo_weights, combo_hard_negs,
-                                     hard_neg_boost=hard_neg_boost,
-                                     label_smoothing=label_smoothing)
+            loss  = contrastive_loss(
+                a_emb, t_emb, model.logit_scale_a, combos, paths,
+                combo_weights, combo_hard_negs,
+                hard_neg_boost=hard_neg_boost,
+                hard_neg_margin=hard_neg_margin,
+                label_smoothing=label_smoothing,
+            )
             loss  = loss / accum_steps
 
         scaler.scale(loss).backward()
@@ -873,6 +1093,7 @@ def validate(
     combo_weights: dict[str, float] | None = None,
     combo_hard_negs: dict[str, set] | None = None,
     hard_neg_boost: float = 2.0,
+    hard_neg_margin: float = 0.0,
     label_smoothing: float = 0.0,
 ) -> float:
     model.eval()
@@ -897,10 +1118,13 @@ def validate(
             )
             a_emb = F.normalize(audio_feat.pooler_output, dim=-1)
             t_emb = F.normalize(text_feat.pooler_output,  dim=-1)
-            loss  = contrastive_loss(a_emb, t_emb, model.logit_scale_a, combos, paths,
-                                     combo_weights, combo_hard_negs,
-                                     hard_neg_boost=hard_neg_boost,
-                                     label_smoothing=label_smoothing)
+            loss  = contrastive_loss(
+                a_emb, t_emb, model.logit_scale_a, combos, paths,
+                combo_weights, combo_hard_negs,
+                hard_neg_boost=hard_neg_boost,
+                hard_neg_margin=hard_neg_margin,
+                label_smoothing=label_smoothing,
+            )
         total_loss += loss.item()
         n_batches  += 1
 
@@ -1030,8 +1254,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                          "more in-batch negatives = stronger contrastive signal)")
     ap.add_argument("--accum",        type=int,   default=8,     help="Gradient accumulation steps (default 8 -> effective batch 64)")
     ap.add_argument("--lr",           type=float, default=2e-5,  help="Peak learning rate for projection heads (default 2e-5)")
-    ap.add_argument("--lr-audio-mult", type=float, default=0.1,
-                    help="Audio encoder LR multiplier relative to --lr (default 0.1 → audio gets 2e-6)")
+    ap.add_argument("--lr-audio-mult", type=float, default=0.5,
+                    help="Audio encoder LR multiplier relative to --lr (default 0.5; was 0.1 in early runs)")
     ap.add_argument("--lr-text-mult",  type=float, default=0.5,
                     help="Text encoder LR multiplier relative to --lr (default 0.5 → text gets 1e-5)")
     ap.add_argument("--warmup-steps", type=int,   default=500,   help="LR warmup steps (default 500)")
@@ -1102,16 +1326,32 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "Blends same-species mel spectrograms — keeps positive mask valid.",
     )
     ap.add_argument(
+        "--hard-neg-margin", type=float, default=0.2,
+        help="Additive cosine margin between same-genus hard negatives (default 0.2). "
+             "Set to 0 to use legacy --hard-neg-boost multiplicative mode instead.",
+    )
+    ap.add_argument(
         "--hard-neg-boost", type=float, default=2.0,
-        help="Logit multiplier applied to same-genus hard negatives in the contrastive loss "
-             "(default 2.0). Set to 1.0 to disable the boost while keeping genus lookup. "
-             "Very high values can destabilise training; try 1.5 if R@1 regresses.",
+        help="(Legacy, only when --hard-neg-margin 0.) Logit multiplier for hard negatives.",
     )
     ap.add_argument(
         "--hard-neg-ramp-epochs", type=int, default=2,
-        help="Linearly ramp hard-neg boost from 1.0 to --hard-neg-boost over this many "
-             "epochs (default 2). Set 0 to disable ramping.",
+        help="Ramp hard-neg margin (or legacy boost when margin==0): fraction = (epoch+1)/N "
+             "up to epoch N (default 2). Set 0 to disable ramping.",
     )
+    ap.add_argument(
+        "--no-pk-sampler",
+        action="store_true",
+        help="Use inverse-frequency WeightedRandomSampler instead of PK (P×K) batch sampler.",
+    )
+    ap.add_argument(
+        "--pk-p",
+        type=int,
+        default=8,
+        help="PK sampler: distinct combos per batch (default 8). With --pk-k 2 => phys batch 16 on 12GB GPUs. "
+             "Use e.g. --pk-p 64 --pk-k 2 only if you have enough VRAM for 128-way contrastive.",
+    )
+    ap.add_argument("--pk-k", type=int, default=2, help="PK sampler: clips per combo (default 2)")
     ap.add_argument(
         "--label-smoothing", type=float, default=0.0,
         help="Blend the per-row soft targets with a uniform distribution to reduce "
@@ -1120,8 +1360,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument(
         "--no-loss-weights", action="store_true",
         help="Disable combo inverse-frequency weighting inside the contrastive loss. "
-             "The WeightedRandomSampler still balances sampling — this flag just stops "
-             "the double-reweighting effect (sampler + loss both active by default).",
+             "With the default PK sampler (or WeightedRandomSampler), use this to avoid "
+             "double reweighting in the loss.",
     )
     ap.add_argument(
         "--rich-text-prob", type=float, default=0.75,
@@ -1184,6 +1424,10 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         warmstart_line,
         f"| Epochs | {args.epochs} |",
         f"| Batch size | {args.batch_size} × accum {args.accum} = effective {args.batch_size * args.accum} |",
+        f"| Train sampler | "
+        f"{'PKBatchSampler (' + str(args.pk_p) + '×' + str(args.pk_k) + ' = '
+         + str(args.pk_p * args.pk_k) + '/batch)'
+         if not args.no_pk_sampler else 'WeightedRandomSampler (--no-pk-sampler)'} |",
         f"| Base LR | {args.lr} |",
         f"| Audio encoder LR | {args.lr * args.lr_audio_mult:.2e} (×{args.lr_audio_mult}) |",
         f"| Text encoder LR | {args.lr * args.lr_text_mult:.2e} (×{args.lr_text_mult}) |",
@@ -1195,7 +1439,8 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         f"| Train pairs | {n_train:,} |",
         f"| Val pairs | {n_val:,} |",
         f"| Hard negatives | {'enabled (same-genus)' if Path(args.taxonomy).exists() else 'disabled (taxonomy not found)'} |",
-        f"| Hard neg boost | {args.hard_neg_boost} |",
+        f"| Hard neg margin / boost | "
+        f"{'margin ' + str(args.hard_neg_margin) if args.hard_neg_margin > 0 else 'legacy boost ' + str(args.hard_neg_boost)} |",
         f"| Hard neg ramp epochs | {args.hard_neg_ramp_epochs} |",
         f"| Label smoothing | {args.label_smoothing} |",
         f"| Loss combo weights | {'disabled (--no-loss-weights)' if args.no_loss_weights else 'enabled (inverse-frequency)'} |",
@@ -1206,8 +1451,8 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         "",
         "## 2. Epoch Training Curve",
         "",
-        "| Epoch | train_loss | val_loss | R@1 | Time | Notes |",
-        "|------:|-----------:|---------:|----:|-----:|-------|",
+        "| Epoch | train_loss | val_loss | R@1 (in-batch) | Hit@1 (fast) | Time | Notes |",
+        "|------:|-----------:|---------:|---------------:|-------------:|-----:|-------|",
         "<!-- EPOCH_ROWS_PLACEHOLDER -->",
         "",
         "---",
@@ -1217,6 +1462,9 @@ def _audit_start(args: argparse.Namespace, ckpt_dir: Path,
         "> **TODO:** paste eval metrics here after running `scripts/evaluate_clap.py`.",
         "> Key numbers to record: mAP, R@1, R@10, median_first_rank for",
         "> `all_variants`, `name`, `rich_holdout`, `finetuned_zeroshot`.",
+        "> Train log: **R@1 (in-batch)** = legacy audio\u2192text top-1 among val mini-batches; "
+        "**Hit@1 (fast)** = subsampled text\u2192audio gallery retrieval (closer to offline eval). "
+        "`best_r1.pt` is chosen by **Hit@1 (fast)**.",
         "",
         "---",
         "",
@@ -1257,9 +1505,15 @@ def _audit_finalize(audit_path: Path,
         return
 
     row_lines = []
-    for (ep, tl, vl, r1, elapsed, note) in epoch_rows:
+    for row in epoch_rows:
+        if len(row) == 7:
+            ep, tl, vl, r1_ib, hit1_fast, elapsed, note = row
+        else:
+            ep, tl, vl, lone, elapsed, note = row
+            r1_ib, hit1_fast = lone, lone
         row_lines.append(
-            f"| {ep:02d} | {tl:.4f} | {vl:.4f} | {r1:.4f} | {elapsed:.0f}s | {note} |"
+            f"| {ep:02d} | {tl:.4f} | {vl:.4f} | "
+            f"{r1_ib:.4f} | {hit1_fast:.4f} | {elapsed:.0f}s | {note} |"
         )
 
     text = audit_path.read_text(encoding="utf-8")
@@ -1317,11 +1571,19 @@ def main(argv: list[str] | None = None) -> int:
         f"persistent: {'off' if args.no_persistent_workers else 'on'}"
     )
     print(f"Data path:    {'pre-computed .clap.pt (fast)' if not args.no_precomputed else 'raw audio (slow)'}")
-    print(f"Hard-neg boost: {args.hard_neg_boost}  |  "
-          f"label smoothing: {args.label_smoothing}  |  "
-          f"loss weights: {'OFF (--no-loss-weights)' if args.no_loss_weights else 'ON'}")
+    if args.hard_neg_margin > 0:
+        print(f"Hard-neg margin (cosine): {args.hard_neg_margin}")
+    else:
+        print(f"Hard-neg (legacy logit × boost): {args.hard_neg_boost}")
+    print(
+        f"label smoothing: {args.label_smoothing}  |  "
+        f"loss weights: {'OFF (--no-loss-weights)' if args.no_loss_weights else 'ON'}"
+    )
     print(f"Hard-neg ramp epochs: {args.hard_neg_ramp_epochs}  |  "
           f"rich-text prob: {args.rich_text_prob}")
+    smp = ("WeightedRandomSampler (--no-pk-sampler)"
+           if args.no_pk_sampler else f"PK sampler {args.pk_p}×{args.pk_k} per batch")
+    print(f"Train sampler:   {smp}")
 
     # ── processor + model ─────────────────────────────────────────────────────
     print("\nLoading processor and model weights ...")
@@ -1411,24 +1673,45 @@ def main(argv: list[str] | None = None) -> int:
         None if args.no_loss_weights else combo_weights
     )
     if args.no_loss_weights:
-        print("  Loss combo weights: DISABLED (--no-loss-weights); sampler still active.")
+        print("  Loss combo weights: DISABLED (--no-loss-weights).")
 
-    # WeightedRandomSampler: each training pair is sampled with probability
-    # proportional to its combo's inverse frequency, so rare combos appear as
-    # often as common ones in expectation each epoch.
-    sample_weights = torch.tensor(
-        [combo_weights.get(p.get("combo", ""), 1.0) for p in train_ds.pairs],
-        dtype=torch.float64,
-    )
-    weighted_sampler = WeightedRandomSampler(
-        weights     = sample_weights,
-        num_samples = len(train_ds),
-        replacement = True,
-    )
-    print(
-        f"  WeightedRandomSampler: {len(combo_freq)} combos, "
-        f"weight range [{sample_weights.min():.3f}, {sample_weights.max():.3f}]"
-    )
+    use_pk = not args.no_pk_sampler
+    pk_batch = args.pk_p * args.pk_k
+    if use_pk:
+        pk_sampler = PKBatchSampler(
+            train_ds,
+            p_classes=args.pk_p,
+            k_per_class=args.pk_k,
+            num_batches=max(1, len(train_ds) // max(pk_batch, 1)),
+            seed=args.seed,
+        )
+        sampler_msg = (
+            f"PKBatchSampler ({args.pk_p} combos × {args.pk_k} clips = {pk_batch}/batch)"
+        )
+    else:
+        sample_weights = torch.tensor(
+            [combo_weights.get(p.get("combo", ""), 1.0) for p in train_ds.pairs],
+            dtype=torch.float64,
+        )
+        weighted_sampler = WeightedRandomSampler(
+            weights     = sample_weights,
+            num_samples = len(train_ds),
+            replacement = True,
+        )
+        sampler_msg = (
+            f"WeightedRandomSampler: {len(combo_freq)} combos, "
+            f"range [{sample_weights.min():.3f}, {sample_weights.max():.3f}]"
+        )
+    print(f"  {sampler_msg}")
+    if use_pk and pk_batch != args.batch_size:
+        print(f"  [note] PK uses batch={pk_batch} (not --batch-size={args.batch_size})")
+    if use_pk and pk_batch > 32:
+        print(
+            "  WARNING: PK physical batch is "
+            f"{pk_batch}; on ~12 GB GPUs this often causes CUDA OOM. "
+            "Default is 8×2=16; use smaller --pk-p/--pk-k or --no-pk-sampler.",
+            file=sys.stderr,
+        )
 
     # ── hard negative lookup: same genus, different species ───────────────────
     # combo_hard_negs[combo] = set of combos from same genus (≠ species).
@@ -1459,16 +1742,26 @@ def main(argv: list[str] | None = None) -> int:
         loader_kwargs["prefetch_factor"] = max(1, args.prefetch_factor)
         loader_kwargs["persistent_workers"] = (not args.no_persistent_workers)
 
-    train_loader = DataLoader(
-        train_ds,
-        batch_size  = args.batch_size,
-        sampler     = weighted_sampler,   # replaces shuffle=True
-        num_workers = args.workers,
-        collate_fn  = _collate,
-        pin_memory  = (device.type == "cuda"),
-        drop_last   = True,
-        **loader_kwargs,
-    )
+    if use_pk:
+        train_loader = DataLoader(
+            train_ds,
+            batch_sampler=pk_sampler,
+            num_workers = args.workers,
+            collate_fn  = _collate,
+            pin_memory  = (device.type == "cuda"),
+            **loader_kwargs,
+        )
+    else:
+        train_loader = DataLoader(
+            train_ds,
+            batch_size  = args.batch_size,
+            sampler     = weighted_sampler,
+            num_workers = args.workers,
+            collate_fn  = _collate,
+            pin_memory  = (device.type == "cuda"),
+            drop_last   = True,
+            **loader_kwargs,
+        )
     val_loader = DataLoader(
         val_ds,
         batch_size  = args.batch_size,
@@ -1589,35 +1882,68 @@ def main(argv: list[str] | None = None) -> int:
             elif not freeze_ls and epoch == args.freeze_logscale_epochs:
                 print(f"Epoch {epoch}: logit_scale unfrozen.")
 
-        effective_hard_neg_boost = args.hard_neg_boost
-        if args.hard_neg_ramp_epochs > 0:
-            frac = min(1.0, (epoch + 1) / max(1, args.hard_neg_ramp_epochs))
-            effective_hard_neg_boost = 1.0 + (args.hard_neg_boost - 1.0) * frac
-            if epoch == 0 or epoch < args.hard_neg_ramp_epochs:
-                print(f"Epoch {epoch:02d}: hard-neg boost ramp -> {effective_hard_neg_boost:.3f}")
+        effective_margin = 0.0
+        effective_hard_neg_boost = 1.0
+        if args.hard_neg_margin > 0.0:
+            if args.hard_neg_ramp_epochs > 0:
+                frac_m = min(1.0, (epoch + 1) / max(1, args.hard_neg_ramp_epochs))
+                effective_margin = args.hard_neg_margin * frac_m
+            else:
+                effective_margin = args.hard_neg_margin
+            if args.hard_neg_ramp_epochs > 0 and (
+                epoch == 0 or epoch < args.hard_neg_ramp_epochs
+            ):
+                print(f"Epoch {epoch:02d}: hard-neg margin -> {effective_margin:.4f}")
+        else:
+            effective_hard_neg_boost = args.hard_neg_boost
+            if args.hard_neg_ramp_epochs > 0:
+                frac = min(1.0, (epoch + 1) / max(1, args.hard_neg_ramp_epochs))
+                effective_hard_neg_boost = 1.0 + (args.hard_neg_boost - 1.0) * frac
+            if args.hard_neg_ramp_epochs > 0 and (
+                epoch == 0 or epoch < args.hard_neg_ramp_epochs
+            ):
+                print(
+                    f"Epoch {epoch:02d}: hard-neg boost ramp -> "
+                    f"{effective_hard_neg_boost:.3f}"
+                )
 
         train_loss = train_one_epoch(
             model, train_loader, optimizer, scaler, scheduler,
             device, args.accum, epoch, use_amp, loss_combo_weights, combo_hard_negs,
             mixup_alpha=args.mixup_alpha,
             hard_neg_boost=effective_hard_neg_boost,
+            hard_neg_margin=effective_margin,
             label_smoothing=args.label_smoothing,
         )
         val_loss = validate(model, val_loader, device, use_amp,
                             loss_combo_weights, combo_hard_negs,
                             hard_neg_boost=effective_hard_neg_boost,
+                            hard_neg_margin=effective_margin,
                             label_smoothing=args.label_smoothing)
-        r1       = recall_at_1(model, val_loader, processor, device)
+        r1_in_batch = recall_at_1_in_batch_val(model, val_loader, processor, device)
+        hit1_fast = fast_eval_hit_at_1(
+            model,
+            val_ds,
+            processor,
+            device,
+            audio_root=audio_root,
+            precomputed=use_precomputed,
+            use_amp=use_amp,
+            seed=args.seed + epoch,
+        )
 
         elapsed = time.time() - t0
         print(
             f"epoch {epoch:02d}  "
             f"train_loss={train_loss:.4f}  "
             f"val_loss={val_loss:.4f}  "
-            f"R@1={r1:.4f}  "
+            f"R@1={r1_in_batch:.4f}  "
+            f"Hit@1={hit1_fast:.4f}  "
             f"({elapsed:.0f}s)"
         )
-        audit_rows.append((epoch, train_loss, val_loss, r1, elapsed, ""))
+        audit_rows.append(
+            (epoch, train_loss, val_loss, r1_in_batch, hit1_fast, elapsed, ""),
+        )
 
         # Update best before saving latest (latest.pt must carry correct best_val_loss for resume)
         if val_loss < best_val_loss:
@@ -1628,14 +1954,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"  [OK] new best val_loss={best_val_loss:.4f}  ->  {ckpt_dir}/best.pt")
 
-        # best_r1.pt: checkpoint chosen by highest training R@1 (may differ from best.pt)
-        if r1 > best_r1:
-            best_r1 = r1
+        # best_r1.pt: chosen by Hit@1 (fast eval), not legacy in-batch R@1
+        if hit1_fast > best_r1:
+            best_r1 = hit1_fast
             save_checkpoint(
                 ckpt_dir / "best_r1.pt",
                 model, optimizer, scaler, scheduler, epoch, best_val_loss,
             )
-            print(f"  [OK] new best R@1={best_r1:.4f}  ->  {ckpt_dir}/best_r1.pt")
+            print(
+                f"  [OK] new best Hit@1(fast)={best_r1:.4f}  "
+                f"->  {ckpt_dir}/best_r1.pt"
+            )
 
         save_checkpoint(
             ckpt_dir / "latest.pt",
@@ -1644,12 +1973,21 @@ def main(argv: list[str] | None = None) -> int:
 
         if pareto is not None:
             pareto.consider(
-                epoch=epoch, train_loss=train_loss, val_loss=val_loss, r1=r1,
-                model=model, optimizer=optimizer, scaler=scaler,
-                scheduler=scheduler, best_val_loss=best_val_loss,
+                epoch=epoch,
+                train_loss=train_loss,
+                val_loss=val_loss,
+                r1=hit1_fast,
+                model=model,
+                optimizer=optimizer,
+                scaler=scaler,
+                scheduler=scheduler,
+                best_val_loss=best_val_loss,
             )
 
-    print(f"\nTraining complete.  Best val loss: {best_val_loss:.4f}  |  Best R@1: {best_r1:.4f}")
+    print(
+        f"\nTraining complete.  Best val loss: {best_val_loss:.4f}  "
+        f"|  Best Hit@1 (fast): {best_r1:.4f}"
+    )
     print(f"Checkpoints: {ckpt_dir.resolve()}")
     _audit_finalize(audit_path, audit_rows, best_val_loss)
     return 0

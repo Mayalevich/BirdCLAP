@@ -70,6 +70,7 @@ except ImportError:
     pass
 
 AAB_PATH   = Path("data/species_descriptions.json")
+TAX_PATH   = Path("data/species_taxonomy.json")
 OUT_PATH   = Path("data/clap_descriptions.json")
 MODEL      = "gpt-4o-mini"   # cheap + fast; swap to "gpt-4o" for higher quality
 # Default is a light throttle; 429 retries back off automatically. Use e.g. --delay 21
@@ -82,37 +83,52 @@ DEFAULT_DELAY_GEMINI = 5.0
 # Vocalization types that are noisy/uninformative — skip these
 SKIP_TYPES = {"uncertain", "various", "various calls", "nan", ""}
 
-SYSTEM_PROMPT = """You are an expert ornithologist writing training descriptions
-for a bird audio machine learning model. Your descriptions will be used to train
-a model that matches audio recordings to natural language queries.
+SYSTEM_PROMPT = """You are writing acoustic training text for a contrastive audio-text model.
+Your output must NEVER name the species, genus, Latin names, or any taxonomic identifier.
+Refer only with "this species", "the bird", or "the animal."
+
+Focus ONLY on observable sound attributes grounded in the source text:
+• sound texture (whistled, buzzy, raspy, clear, nasal),
+• rhythm and repetition (rapid phrases, spaced notes, accelerating trills),
+• pitch contours (rising, falling, high, low, modulated),
+• timing (short, sustained),
+• behavioural context WHEN the source mentions it — do not invent.
 
 Rules:
-- Base ALL acoustic details strictly on the provided species description.
-  Do not add acoustic facts not mentioned in the source text.
-- If the source text does not describe this specific vocalization type,
-  write: INSUFFICIENT_SOURCE_DATA
-- Write in natural, varied language a non-expert could use to search for audio.
-- Each description should be 1-2 sentences, 15-40 words.
-- Vary vocabulary, sentence structure, and emphasis across descriptions.
-- Include: species name, vocalization type, acoustic qualities (pitch/rhythm/timbre),
-  and behavioral context where available.
-- Avoid repetitive lead-ins (e.g., "Listen for", "Hear", "You might hear") and avoid
-  repeating the same clause structure across the four outputs.
-- At least 2 of the 4 descriptions should start directly with species/vocalization
-  context or an acoustic event, not an instruction to the listener.
-- Do not use Latin names. Do not mention recording quality or equipment."""
+• Base EVERY acoustic detail on the supplied species/source text — no invented ecology.
+• If the source does NOT cover this vocalization type, reply with exactly INSUFFICIENT_SOURCE_DATA.
+• Exactly 4 outputs: each 1–2 sentences, ~15–40 words.
+• Avoid repetitive openings; do not lecture the listener.
+• Do NOT mention microphones, bitrate, habitats, geography, seasons, recording quality."""
 
-USER_TEMPLATE = """Species: {common_name}
-Vocalization type: {voc_type}
+USER_TEMPLATE = """Vocalization type (context only — do NOT echo the species label in prose): {voc_type}
 
-AllAboutBirds source text:
+Expert source excerpt:
 \"\"\"
 {aab_text}
 \"\"\"
 
-Generate exactly 4 varied natural language descriptions of a '{voc_type}'
-recording of a {common_name}. Return only a JSON array of 4 strings, no other text.
+Produce exactly four acoustic descriptions referring only to pitch, rhythm,
+timbre, and pattern. Reply with ONLY a JSON array of 4 strings, no preamble.
 Example format: ["desc1", "desc2", "desc3", "desc4"]"""
+
+
+def scrub_species_name(text: str, common: str, scientific: str) -> str:
+    """Rewrite accidental species leakage to generic references (cheap safety net)."""
+    out = text
+    common = common.strip()
+    scientific = scientific.strip()
+    if common:
+        out = re.sub(re.escape(common), "this species", out, flags=re.IGNORECASE)
+    if scientific:
+        out = re.sub(re.escape(scientific), "this species", out, flags=re.IGNORECASE)
+        for tok in scientific.split():
+            if len(tok) > 3:
+                out = re.sub(
+                    rf"\b{re.escape(tok)}\b", "this species", out,
+                    flags=re.IGNORECASE,
+                )
+    return out
 
 
 def _entry_complete(value: object) -> bool:
@@ -196,14 +212,16 @@ def _openai_error_code(e: APIStatusError) -> str:
     return ""
 
 
-def generate_descriptions(client: OpenAI,
-                           common_name: str,
-                           voc_type: str,
-                           aab_text: str,
-                           max_retries: int = 12) -> list[str] | None:
+def generate_descriptions(
+    client: OpenAI,
+    common_name: str,
+    voc_type: str,
+    aab_text: str,
+    scientific_name: str = "",
+    max_retries: int = 12,
+) -> list[str] | None:
     """Call OpenAI to generate 4 descriptions. Retries on RPM rate limits."""
     prompt = USER_TEMPLATE.format(
-        common_name=common_name,
         voc_type=voc_type,
         aab_text=aab_text[:2000],
     )
@@ -219,7 +237,13 @@ def generate_descriptions(client: OpenAI,
             )
             content = getattr(resp.choices[0].message, "content", None)
             text = (content or "").strip()
-            return _parse_four_descriptions(text, common_name, voc_type)
+            descs = _parse_four_descriptions(text, common_name, voc_type)
+            if not descs:
+                return None
+            return [
+                scrub_species_name(d, common_name, scientific_name)
+                for d in descs
+            ]
         except APIStatusError as e:
             code = _openai_error_code(e)
             if e.status_code == 429 and code == "insufficient_quota":
@@ -316,12 +340,12 @@ def generate_descriptions_gemini(
     common_name: str,
     voc_type: str,
     aab_text: str,
+    scientific_name: str,
     temperature: float,
     max_retries: int = 24,
 ) -> list[str] | None:
     """Call Google Gemini to generate 4 descriptions. Retries on rate limits."""
     user_block = USER_TEMPLATE.format(
-        common_name=common_name,
         voc_type=voc_type,
         aab_text=aab_text[:2000],
     )
@@ -342,7 +366,13 @@ def generate_descriptions_gemini(
                 fb = getattr(response, "prompt_feedback", None)
                 print(f"  [Gemini empty/finish reason] {common_name} | {voc_type}: {fb}")
                 return None
-            return _parse_four_descriptions(text, common_name, voc_type)
+            descs = _parse_four_descriptions(text, common_name, voc_type)
+            if not descs:
+                return None
+            return [
+                scrub_species_name(d, common_name, scientific_name)
+                for d in descs
+            ]
         except KeyboardInterrupt:
             raise
         except Exception as e:
@@ -369,6 +399,11 @@ def main():
     parser.add_argument("--output", default=str(OUT_PATH))
     parser.add_argument("--aab", default=str(AAB_PATH),
                         help="Species descriptions JSON")
+    parser.add_argument(
+        "--taxonomy",
+        default=str(TAX_PATH),
+        help="species_taxonomy.json for scientific-name scrub pass (default data/species_taxonomy.json)",
+    )
     parser.add_argument(
         "--provider", choices=("openai", "gemini"), default="openai",
         help="LLM backend: OpenAI Chat Completions or Google Gemini API (default: openai)",
@@ -450,6 +485,14 @@ def main():
         genai_pkg.configure(api_key=api_key.strip())
         gem_model = genai_pkg.GenerativeModel(args.gemini_model)
 
+    tax_db: dict[str, Any] = {}
+    tax_path_arg = Path(args.taxonomy)
+    if tax_path_arg.is_file():
+        tax_db = json.loads(tax_path_arg.read_text(encoding="utf-8"))
+        print(f"Loaded taxonomy ({len(tax_db)} species) for name scrub from {tax_path_arg}")
+    else:
+        print(f"[warn] No taxonomy at {tax_path_arg} — scientific-name scrub is common-name only")
+
     raw      = json.loads(Path(args.aab).read_text(encoding="utf-8"))
     # Support both old format {"species": "text"} and new {"species": {"text": ..., "source": ...}}
     aab = {k: (v["text"] if isinstance(v, dict) else v) for k, v in raw.items()}
@@ -518,9 +561,16 @@ def main():
             skipped += 1
             continue
 
+        sci_hint = ""
+        trow = tax_db.get(name)
+        if isinstance(trow, dict):
+            sci_hint = str(trow.get("scientific") or "")
+
         if args.provider == "openai":
             assert openai_client is not None
-            descs = generate_descriptions(openai_client, name, vtype, aab_text)
+            descs = generate_descriptions(
+                openai_client, name, vtype, aab_text, scientific_name=sci_hint,
+            )
         else:
             assert genai_pkg is not None and gem_model is not None
             descs = generate_descriptions_gemini(
@@ -529,6 +579,7 @@ def main():
                 name,
                 vtype,
                 aab_text,
+                scientific_name=sci_hint,
                 temperature=args.gemini_temperature,
                 max_retries=args.gemini_max_retries,
             )
