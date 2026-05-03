@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(Get-Process -Name python, python3, uvicorn -ErrorAction SilentlyContinue)",
+      "Bash(curl -s http://localhost:8001/health)"
     ]
   }
 }

@@ -74,7 +74,9 @@ function frameAudioData(
   opts?: { fps?: number; maxSeconds?: number; frameSize?: number }
 ): AudioDrivenPoint[] {
   const fps = opts?.fps ?? TARGET_FPS;
-  const maxSeconds = opts?.maxSeconds ?? 12;
+  const durSec = data.length / sr;
+  /** Default: analyze the **whole** buffer so viz time matches `<audio>.currentTime` for long clips (old 12s cap caused wraps and “late / missing” lights). */
+  const maxSeconds = Math.min(opts?.maxSeconds ?? durSec, durSec);
   const frameSize = opts?.frameSize ?? 256;
   const bins = 56;
 
@@ -101,6 +103,44 @@ function frameAudioData(
     });
   }
   return out;
+}
+
+/** Mono 16-bit PCM WAV for HTMLAudioElement playback (e.g. viz fallback when no upload). */
+export function syntheticAudioToWavBlob(seed: string): Blob {
+  const { samples, sampleRate } = makeSyntheticAudio(seed);
+  return float32MonoToWav16(samples, sampleRate);
+}
+
+function float32MonoToWav16(samples: Float32Array, sampleRate: number): Blob {
+  const numChannels = 1;
+  const bitsPerSample = 16;
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(buffer);
+  const writeStr = (off: number, s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)!);
+  };
+  writeStr(0, "RIFF");
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, "WAVE");
+  writeStr(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  writeStr(36, "data");
+  view.setUint32(40, dataSize, true);
+  let off = 44;
+  for (let i = 0; i < samples.length; i++, off += 2) {
+    const x = Math.max(-1, Math.min(1, samples[i]!));
+    view.setInt16(off, x < 0 ? Math.round(x * 32768) : Math.round(x * 32767), true);
+  }
+  return new Blob([buffer], { type: "audio/wav" });
 }
 
 function makeSyntheticAudio(seed: string): { samples: Float32Array; sampleRate: number } {
@@ -160,16 +200,16 @@ export async function buildAudioDrivenPoints(
 export function freqToColor(freqHz: number): { r: number; g: number; b: number } {
   const t = Math.max(0, Math.min(1, (freqHz - MIN_FREQ_HZ) / (MAX_FREQ_HZ - MIN_FREQ_HZ)));
   type ColorStop = [number, [number, number, number]];
-  /** Deep jewel ramp (avoid pastel yellow / pale cyan) so additive chirps read saturated, not “washed.” */
-  const stops = [
-    [0.0, [22, 28, 118]],
-    [0.18, [92, 14, 138]],
-    [0.36, [168, 18, 88]],
-    [0.56, [178, 52, 12]],
-    [0.72, [142, 96, 14]],
-    [0.86, [14, 112, 52]],
-    [1.0, [12, 108, 124]],
-  ] as ColorStop[];
+  /** Classic spectral / rainbow ramp: low freq = violet/blue, high freq = red (matches spectrogram convention). */
+  const stops: ColorStop[] = [
+    [0.00, [110,   0, 200]],  // violet  (2 kHz)
+    [0.17, [ 15,  15, 255]],  // blue    (~3 kHz)
+    [0.33, [  0, 210, 230]],  // cyan    (~4 kHz)
+    [0.50, [ 15, 225,  45]],  // green   (5 kHz)
+    [0.67, [240, 230,   0]],  // yellow  (~6 kHz)
+    [0.83, [255, 105,   0]],  // orange  (~7 kHz)
+    [1.00, [255,  10,   0]],  // red     (8 kHz)
+  ];
 
   let a: ColorStop = stops[0]!;
   let b: ColorStop = stops[stops.length - 1]!;
@@ -183,7 +223,7 @@ export function freqToColor(freqHz: number): { r: number; g: number; b: number }
     }
   }
   const local = (t - a[0]) / Math.max(1e-6, b[0] - a[0]);
-  const c = [0, 1, 2].map((k) => Math.round(a[1][k]! + (b[1][k]! - a[1][k]!) * local));
+  const c = [0, 1, 2].map((k) => a[1][k]! + (b[1][k]! - a[1][k]!) * local);
   return { r: c[0]! / 255, g: c[1]! / 255, b: c[2]! / 255 };
 }
 
@@ -206,11 +246,24 @@ export function enrichChirpRgb(c: { r: number; g: number; b: number }): { r: num
   return { r, g, b };
 }
 
+export type ChirpChainOptions = {
+  /** Sub-threshold run length (seconds) before a segment ends */
+  gapSeconds?: number;
+  /** Minimum segment length (seconds) to count as a chirp */
+  minChirpSeconds?: number;
+  /** Cap nodes per chain (longer chains are strided); higher = finer sync for viz */
+  maxNodes?: number;
+};
+
 /**
  * Frame index chains for each detected “chirp” (contiguous energy above threshold, split by silence gaps).
  * Used to drive sequential square lighting along the temporal path.
  */
-export function extractChirpChains(amplitudes: Float32Array, fps: number): number[][] {
+export function extractChirpChains(
+  amplitudes: Float32Array,
+  fps: number,
+  opts?: ChirpChainOptions
+): number[][] {
   const n = amplitudes.length;
   if (n < 10) {
     return [Array.from({ length: n }, (_, i) => i)];
@@ -221,9 +274,9 @@ export function extractChirpChains(amplitudes: Float32Array, fps: number): numbe
   const q45 = sorted[Math.floor(n * 0.45)]!;
   const thresh = Math.max(q25 * 1.75, q45 * 1.05, 0.035);
 
-  const gapFrames = Math.max(6, Math.round(0.11 * fps));
-  const minChirp = Math.max(5, Math.round(0.07 * fps));
-  const maxNodes = 48;
+  const gapFrames = Math.max(4, Math.round((opts?.gapSeconds ?? 0.11) * fps));
+  const minChirp = Math.max(4, Math.round((opts?.minChirpSeconds ?? 0.07) * fps));
+  const maxNodes = opts?.maxNodes ?? 48;
 
   const chains: number[][] = [];
   let i = 0;

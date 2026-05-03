@@ -44,10 +44,17 @@ export function HomePage() {
             <span className="file-name">{uploadedFile.name}</span>
           ) : null}
         </div>
-        <div className="spectrogram-preview">
-          <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Spectrogram preview" />
-          {!uploadedFile ? (
-            <p className="muted spectrogram-preview__hint">Spectrogram appears after you choose a file.</p>
+        <div className="spectrogram-preview-row">
+          <div className="spectrogram-preview">
+            <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Spectrogram preview" />
+            {!uploadedFile ? (
+              <p className="muted spectrogram-preview__hint">Spectrogram appears after you choose a file.</p>
+            ) : null}
+          </div>
+          {uploadedFile ? (
+            <Link to="/viz/upload" className="btn btn--outline">
+              Visualization
+            </Link>
           ) : null}
         </div>
         <p>

@@ -156,7 +156,7 @@ export function QueryPage() {
             disabled={!uploadedFile || classifyLoading}
             onClick={runClassify}
           >
-            {classifyLoading ? "Classifying…" : "Run mock classification"}
+            {classifyLoading ? "Classifying…" : "Classify audio"}
           </button>
           <button
             type="button"
@@ -164,15 +164,22 @@ export function QueryPage() {
             disabled={!uploadedFile || loading}
             onClick={runSimilarSearch}
           >
-            {loading ? "Searching…" : "Search similar (mock)"}
+            {loading ? "Searching…" : "Search similar"}
           </button>
         </div>
-        <div className="spectrogram-preview">
-          <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Upload spectrogram" />
+        <div className="spectrogram-preview-row">
+          <div className="spectrogram-preview">
+            <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Upload spectrogram" />
+          </div>
+          {uploadedFile ? (
+            <Link to="/viz/upload" className="btn btn--outline">
+              Visualization
+            </Link>
+          ) : null}
         </div>
         {classifyHits ? (
           <div className="classify-hits">
-            <h3>Posterior over labels (mock)</h3>
+            <h3>Classification results</h3>
             <ol>
               {classifyHits.map((h) => (
                 <li key={h.label}>
