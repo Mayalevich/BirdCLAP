@@ -200,16 +200,16 @@ export async function buildAudioDrivenPoints(
 export function freqToColor(freqHz: number): { r: number; g: number; b: number } {
   const t = Math.max(0, Math.min(1, (freqHz - MIN_FREQ_HZ) / (MAX_FREQ_HZ - MIN_FREQ_HZ)));
   type ColorStop = [number, [number, number, number]];
-  /** Deep jewel ramp (avoid pastel yellow / pale cyan) so additive chirps read saturated, not “washed.” */
-  const stops = [
-    [0.0, [22, 28, 118]],
-    [0.18, [92, 14, 138]],
-    [0.36, [168, 18, 88]],
-    [0.56, [178, 52, 12]],
-    [0.72, [142, 96, 14]],
-    [0.86, [14, 112, 52]],
-    [1.0, [12, 108, 124]],
-  ] as ColorStop[];
+  /** Classic spectral / rainbow ramp: low freq = violet/blue, high freq = red (matches spectrogram convention). */
+  const stops: ColorStop[] = [
+    [0.00, [110,   0, 200]],  // violet  (2 kHz)
+    [0.17, [ 15,  15, 255]],  // blue    (~3 kHz)
+    [0.33, [  0, 210, 230]],  // cyan    (~4 kHz)
+    [0.50, [ 15, 225,  45]],  // green   (5 kHz)
+    [0.67, [240, 230,   0]],  // yellow  (~6 kHz)
+    [0.83, [255, 105,   0]],  // orange  (~7 kHz)
+    [1.00, [255,  10,   0]],  // red     (8 kHz)
+  ];
 
   let a: ColorStop = stops[0]!;
   let b: ColorStop = stops[stops.length - 1]!;
@@ -223,7 +223,7 @@ export function freqToColor(freqHz: number): { r: number; g: number; b: number }
     }
   }
   const local = (t - a[0]) / Math.max(1e-6, b[0] - a[0]);
-  const c = [0, 1, 2].map((k) => Math.round(a[1][k]! + (b[1][k]! - a[1][k]!) * local));
+  const c = [0, 1, 2].map((k) => a[1][k]! + (b[1][k]! - a[1][k]!) * local);
   return { r: c[0]! / 255, g: c[1]! / 255, b: c[2]! / 255 };
 }
 
