@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ResultCard } from "@/components/ResultCard";
 import { useSaved } from "@/context/SavedContext";
 
@@ -14,7 +15,12 @@ export function SavedPage() {
         </p>
       </header>
       {saved.length === 0 ? (
-        <p className="muted">Nothing saved yet. Run a search and press Save on a card.</p>
+        <div className="empty-panel-hint muted">
+          <p>Nothing saved yet.</p>
+          <p className="small">
+            <Link to="/query">Run a search on Query</Link>, then press <strong>Save</strong> on a result card.
+          </p>
+        </div>
       ) : (
         <div className="results-grid">
           {saved.map((r) => (

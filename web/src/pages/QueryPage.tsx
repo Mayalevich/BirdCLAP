@@ -1,6 +1,11 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { classifyUpload, searchDataset, searchSimilarToUpload } from "@/api/backend";
+import {
+  classifyUpload,
+  formatUserFacingDemoError,
+  searchDataset,
+  searchSimilarToUpload,
+} from "@/api/backend";
 import type { ClassificationHit, SearchResult } from "@/api/types";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { ResultCard } from "@/components/ResultCard";
@@ -20,12 +25,18 @@ export function QueryPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [classifyHits, setClassifyHits] = useState<ClassificationHit[] | null>(null);
   const [classifyLoading, setClassifyLoading] = useState(false);
   const [specCanvas, setSpecCanvas] = useState<HTMLCanvasElement | null>(null);
 
-  useSpectrogram(uploadedFile, specCanvas);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const searchInFlight = useRef(false);
+  const similarInFlight = useRef(false);
+  const classifyInFlight = useRef(false);
+
+  const { loading: specLoading, error: specError } = useSpectrogram(uploadedFile, specCanvas);
 
   useEffect(() => {
     if (sourceHint !== "dataset") return;
@@ -33,49 +44,54 @@ export function QueryPage() {
   }, [sourceHint, vocabMode]);
 
   const runDatasetSearch = async () => {
+    if (searchInFlight.current) return;
+    searchInFlight.current = true;
     setLoading(true);
-    setError(null);
+    setSearchError(null);
     try {
       const r = await searchDataset(query, vocabMode);
       setResults(r);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Search failed.";
       setResults([]);
-      setError(message);
+      setSearchError(formatUserFacingDemoError(err));
     } finally {
       setLoading(false);
+      searchInFlight.current = false;
     }
   };
 
   const runSimilarSearch = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFile || similarInFlight.current) return;
+    similarInFlight.current = true;
     setLoading(true);
-    setError(null);
+    setUploadError(null);
     try {
       const r = await searchSimilarToUpload(uploadedFile);
       setResults(r);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Similarity search failed.";
       setResults([]);
-      setError(message);
+      setUploadError(formatUserFacingDemoError(err));
     } finally {
       setLoading(false);
+      similarInFlight.current = false;
     }
   };
 
   const runClassify = async () => {
-    if (!uploadedFile) return;
+    if (!uploadedFile || classifyInFlight.current) return;
+    classifyInFlight.current = true;
     setClassifyLoading(true);
-    setError(null);
+    setUploadError(null);
     try {
       const h = await classifyUpload(uploadedFile);
-      setClassifyHits(h);
+      setClassifyHits(h.length ? h : null);
+      if (!h.length) setUploadError("Classification returned no labels. Check the API response.");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Classification failed.";
       setClassifyHits(null);
-      setError(message);
+      setUploadError(formatUserFacingDemoError(err));
     } finally {
       setClassifyLoading(false);
+      classifyInFlight.current = false;
     }
   };
 
@@ -84,8 +100,8 @@ export function QueryPage() {
       <header className="page-header">
         <h1>Query workspace</h1>
         <p className="muted">
-          Text retrieval using the fine-tuned CLAP model, upload-driven classification scores,
-          and acoustic similarity search — all powered by the backend.
+          Search the catalog by text, upload a clip for species classification, or find acoustically
+          similar recordings.
         </p>
       </header>
 
@@ -108,7 +124,7 @@ export function QueryPage() {
           </button>
         </div>
         <p className="muted small">
-          Passed as context to the backend search query (e.g. “Turdus” vs “robin”).
+          Passed as context to the backend search query (for example “Turdus” vs “robin”).
         </p>
       </section>
 
@@ -125,13 +141,23 @@ export function QueryPage() {
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-describedby={searchError ? "query-search-error" : undefined}
             onKeyDown={(e) => e.key === "Enter" && runDatasetSearch()}
           />
           <button type="button" className="btn btn--primary" onClick={runDatasetSearch} disabled={loading}>
             {loading ? "Searching…" : "Search dataset"}
           </button>
+          {searchError ? (
+            <button type="button" className="btn btn--outline" onClick={runDatasetSearch} disabled={loading}>
+              Retry search
+            </button>
+          ) : null}
         </div>
-        {error ? <p className="muted" role="alert">{error}</p> : null}
+        {searchError ? (
+          <p className="panel-alert panel-alert--error" id="query-search-error" role="alert">
+            {searchError}
+          </p>
+        ) : null}
       </section>
 
       <section className="panel">
@@ -145,6 +171,7 @@ export function QueryPage() {
                 const f = e.target.files?.[0];
                 setUploadedFile(f ?? null);
                 setClassifyHits(null);
+                setUploadError(null);
               }}
             />
             <span className="btn btn--outline">Choose audio</span>
@@ -166,6 +193,21 @@ export function QueryPage() {
           >
             {loading ? "Searching…" : "Search similar"}
           </button>
+          {uploadError ? (
+            <>
+              <button
+                type="button"
+                className="btn btn--outline"
+                disabled={classifyLoading}
+                onClick={runClassify}
+              >
+                Retry classify
+              </button>
+              <button type="button" className="btn btn--outline" disabled={loading} onClick={runSimilarSearch}>
+                Retry similar
+              </button>
+            </>
+          ) : null}
         </div>
         <div className="spectrogram-preview-row">
           <div className="spectrogram-preview">
@@ -177,6 +219,17 @@ export function QueryPage() {
             </Link>
           ) : null}
         </div>
+        {specLoading ? <p className="muted small">Decoding spectrogram…</p> : null}
+        {uploadError ? (
+          <p className="panel-alert panel-alert--error" role="alert">
+            {uploadError}
+          </p>
+        ) : null}
+        {specError ? (
+          <p className="panel-alert panel-alert--error" role="alert">
+            {specError}
+          </p>
+        ) : null}
         {classifyHits ? (
           <div className="classify-hits">
             <h3>Classification results</h3>
@@ -203,7 +256,13 @@ export function QueryPage() {
           </Link>
         </div>
         {results.length === 0 ? (
-          <p className="muted">Run a dataset search or similarity search to see cards here.</p>
+          <div className="empty-panel-hint muted">
+            <p>Run a dataset search or similarity search to see cards here.</p>
+            <p className="small">
+              Tip: jump to Dataset search from the Overview, or{" "}
+              <Link to="/query?source=dataset">open a seeded catalog query</Link>.
+            </p>
+          </div>
         ) : (
           <div className="results-grid">
             {results.map((r) => (

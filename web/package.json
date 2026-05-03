@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "smoke": "npm run build && node scripts/smoke-contract.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

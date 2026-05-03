@@ -7,8 +7,8 @@
   --border: #c8c9c4;
   --border-strong: #9a9b95;
   --text: #1a1b18;
-  --muted: #5c5d57;
-  --muted2: #7a7b74;
+  --muted: #4a4b45;
+  --muted2: #6a6b64;
   --accent: #1e4d6e;
   --accent-hover: #163d58;
   --accent-dim: #dfe8ee;
@@ -86,8 +86,11 @@ a:hover {
 
 .app-shell__brand {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 0.65rem;
+  flex: 1 1 auto;
+  min-width: min(560px, 100%);
 }
 
 .app-shell__brand-text {
@@ -172,6 +175,90 @@ a:hover {
   font-variant-numeric: tabular-nums;
 }
 
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.skip-link:focus {
+  position: fixed;
+  z-index: 200;
+  left: 1rem;
+  top: 1rem;
+  width: auto;
+  height: auto;
+  padding: 0.45rem 0.85rem;
+  overflow: visible;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  color: var(--text);
+  font-weight: 600;
+  outline: none;
+}
+
+.app-shell__api-banner {
+  margin: 0;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.app-shell__api-banner--warn {
+  background: #fff4d6;
+  color: var(--text);
+}
+
+.app-shell__api-banner--error {
+  background: #fde8e8;
+  color: #5a1f1f;
+}
+
+.app-shell__code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.app-shell__api-badge {
+  margin-left: auto;
+  align-self: center;
+  padding: 0.18rem 0.5rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+
+.app-shell__api-badge--off {
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+.app-shell__api-badge--checking {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.app-shell__api-badge--live {
+  background: #d8f3e4;
+  color: #1a5d36;
+  border-color: #9fd4b8;
+}
+
+.app-shell__api-badge--down {
+  background: #f8dede;
+  color: #6f2020;
+  border-color: #e0a8a8;
+}
+
 .app-shell__main {
   flex: 1;
   max-width: 1120px;
@@ -195,6 +282,36 @@ a:hover {
   font-size: 0.7rem;
   color: var(--muted2);
   letter-spacing: 0.02em;
+}
+
+.panel-alert {
+  margin: 0.65rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--surface2);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.panel-alert--error {
+  border-color: #c98888;
+  background: #fdf6f6;
+  color: #4a2828;
+}
+
+.panel-alert--soft {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.empty-panel-hint {
+  padding: 0.35rem 0;
+}
+
+.empty-panel-hint p {
+  margin: 0 0 0.35rem;
 }
 
 .page-header {
@@ -924,6 +1041,11 @@ a:hover {
 .vdgl-val {
   font-size: 0.78rem;
 }
+
+.viz-page__cold-cache {
+  margin-bottom: 0.85rem;
+}
+
 .viz-page__hint {
   margin-top: 0.75rem;
 }

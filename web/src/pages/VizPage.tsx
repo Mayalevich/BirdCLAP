@@ -12,7 +12,6 @@ export function VizPage() {
   const { id } = useParams<{ id: string }>();
   const { uploadedFile } = useAppPreferences();
 
-  // ── Fullscreen ──────────────────────────────────────────────────────────────
   const stageRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   useEffect(() => {
@@ -27,6 +26,7 @@ export function VizPage() {
       document.exitFullscreen().catch(() => {});
     }
   }, []);
+
   const isUploadRoute = id === "upload";
   const result = id && !isUploadRoute ? getResultById(id) : undefined;
 
@@ -35,18 +35,24 @@ export function VizPage() {
       ? `upload:${uploadedFile.name}:${uploadedFile.lastModified}`
       : result
         ? `${result.id}:${result.recordingId}`
-        : "";
+        : id && !isUploadRoute
+          ? `catalog:${id}`
+          : "";
 
-  /** Upload route requires a file in context; `/viz/:id` can still render with synthetic audio only. */
-  const showViz = isUploadRoute ? Boolean(uploadedFile) : Boolean(result);
+  /** Catalog route still shows viz (synthetic) when metadata is cold; upload route needs a file. */
+  const showViz =
+    Boolean(isUploadRoute && uploadedFile) || Boolean(id && !isUploadRoute && seed.length > 0);
 
   let emptyMessage: string | null = null;
-  if (isUploadRoute && !uploadedFile) {
+  if (!id) {
+    emptyMessage = "No visualization id.";
+  } else if (isUploadRoute && !uploadedFile) {
     emptyMessage =
       "No uploaded file in memory. Choose audio on Query or Home, then open Visualization.";
-  } else if (!isUploadRoute && id && !result) {
-    emptyMessage = "Unknown recording id.";
   }
+
+  const sourceLabel =
+    uploadedFile ? uploadedFile.name : isUploadRoute ? "—" : result ? result.commonName : "catalog recording";
 
   return (
     <div className="page viz-page">
@@ -64,20 +70,20 @@ export function VizPage() {
 
       {showViz ? (
         <>
+          {!result && !isUploadRoute && id ? (
+            <aside className="viz-page__cold-cache panel-alert panel-alert--soft" role="status">
+              Species card unavailable for this link (cache empty after refresh).               The 3-D view still runs for this recording.{" "}
+              <Link to="/query">Run a search</Link> and open <strong>Visualize</strong> from the result card to load full species info.
+            </aside>
+          ) : null}
           <div className="viz-sound-stack">
             <div className="viz-sound-panel viz-sound-panel--stage" ref={stageRef}>
               <div className="embedding-viz-topline">
                 <span className="embedding-viz-stats">Preparing stream…</span>
                 <div className="embedding-viz-topline__right">
-                  <span className="embedding-viz-source">
-                    Source:{" "}
-                    {uploadedFile
-                      ? `upload (${uploadedFile.name})`
-                      : isUploadRoute
-                        ? "—"
-                        : "synthetic timeline (no upload)"}
-                  </span>
+                  <span className="embedding-viz-source">Source: {sourceLabel}</span>
                   <button
+                    type="button"
                     className="viz-fullscreen-btn"
                     onClick={toggleFullscreen}
                     title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
@@ -124,8 +130,14 @@ export function VizPage() {
                   </div>
                 </div>
               </footer>
+            ) : isUploadRoute && uploadedFile ? (
+              <footer className="viz-upload-footer muted small">{uploadedFile.name}</footer>
+            ) : !isUploadRoute && id ? (
+              <footer className="viz-upload-footer muted small">
+                <Link to="/query">Search the catalog</Link> and open Visualize from a result card to see species info here.
+              </footer>
             ) : (
-              <footer className="viz-upload-footer muted small">{uploadedFile!.name}</footer>
+              <footer className="viz-upload-footer muted small">—</footer>
             )}
           </div>
           <section className="viz-data-guide">
@@ -173,7 +185,7 @@ export function VizPage() {
           </p>
         </>
       ) : (
-        <p className="muted">{emptyMessage}</p>
+        emptyMessage ? <p className="muted">{emptyMessage}</p> : null
       )}
     </div>
   );

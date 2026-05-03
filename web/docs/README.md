@@ -4,24 +4,27 @@ This folder is the **onboarding entry point** for anyone working on the `web/` V
 
 ## Read order for a new web developer
 
-1. **[FEATURES.md](./FEATURES.md)** — What the app does today: every screen, user flow, mock API, and major component (including the 3D viz).
-2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** — How to run, build, path aliases, and where to change things safely.
+1. **[FEATURES.md](./FEATURES.md)** — What the app does today: routes, uploads, **`src/api/backend.ts`**, and the 3D viz.
+2. **[DEVELOPMENT.md](./DEVELOPMENT.md)** — Commands, `.env`, build, aliases.
+3. **[DEMO_RUNBOOK.md](./DEMO_RUNBOOK.md)** — Repeatable demo setup and quick fixes live.
+4. **[DEMO_PRODUCTION_CHECKLIST.md](./DEMO_PRODUCTION_CHECKLIST.md)** — Demo-readiness backlog and team splits.
 
 ## Scope (important)
 
-- **No backend** is required: search, classification, and similarity are **mocked in the browser**.
-- **Persistence** is only `localStorage` (saved list + vocabulary preference). Uploads live in React state until refresh.
-- The **temporal embedding view** uses real Web Audio decoding when you pass a file; otherwise it uses a deterministic synthetic signal for demos.
+- **Backend**: search, classify, and similarity calls go to **`VITE_API_BASE_URL`** (`POST /api/search`, `/api/search-by-audio`, `/api/classify-audio`). **[`.env.example`](../.env.example)** describes the env var — copy it to **`web/.env`** and restart Vite.
+- **`src/api/mock.ts`** remains useful as offline reference/fixtures only; **`QueryPage`** and related flows use **`backend.ts`** in normal development.
+- **Persistence**: `localStorage` for saved specimens, vocabulary preference, and a **persisted catalog result cache** keyed by recording id (`lets-solve-it:result-cache`) so Compare/Viz lookups survive reload after a successful search.
 
 ## Source layout (quick map)
 
 | Path | Role |
 |------|------|
 | `src/App.tsx` | Router + providers |
-| `src/layout/AppShell.tsx` | Header, nav, footer |
+| `src/layout/AppShell.tsx` | Header, nav, API banner/badge, footer |
 | `src/pages/*` | Route-level screens |
 | `src/components/` | `ResultCard`, lazy `BirdSoundEmbeddingViz` |
-| `src/api/` | Types + `mock.ts` (replace with real API later) |
+| `src/api/backend.ts` | Live `fetch` client + `/api/search` probe + result cache hydration |
+| `src/api/mock.ts` | Offline mock catalog reference |
 | `src/context/` | Preferences + saved list |
 | `src/saved/` | `localStorage` read/write for saved rows |
 | `src/lib/` | Spectrogram + audio-driven point cloud math |
