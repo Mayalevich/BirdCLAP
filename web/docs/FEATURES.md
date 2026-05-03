@@ -1,17 +1,17 @@
 # Web application — feature reference
 
-This document describes **every user-visible feature** and the **code that implements it**, as of the current repository. It is aimed at onboarding engineers who will extend or replace the mock layer with real services.
+This document describes **every user-visible feature** and the **code that implements it**, as of the current repository. Runtime search/classify/similarity use **`src/api/backend.ts`** against **`VITE_API_BASE_URL`**; **`src/api/mock.ts`** remains an offline reference catalog.
 
 ---
 
 ## 1. Product scope (what the web app is)
 
-The web client is a **research-style prototype workspace** for exploring bird-audio workflows **without a server**, with a primary focus on the **3-D spatiotemporal sound visualization**:
+The web client is a **demo-first workspace** for bird-audio exploration with a backend API plus the **3-D spatiotemporal sound visualization** in-browser:
 
-- Browse a **fixed mock catalog** of species rows (text search).
-- **Upload** an audio file in the browser (decoded with Web Audio API).
-- Run **mock** "classification" and "similarity" that ignore audio content but simulate latency.
-- **Save** rows to `localStorage`, **compare** two slots, and open a **3D visualization** of uploaded audio.
+- Browse/search a **species catalog via the backend** (`POST /api/search`).
+- **Upload** an audio file (decoded with Web Audio API for spectrograms and viz).
+- Run **classification** and **similarity** against the backend (`/api/classify-audio`, `/api/search-by-audio`).
+- **Save** rows to `localStorage`, **compare** two slots (persisted catalog cache aids lookup after reload), open **Visualization** (`/viz/...`).
 - **3-D viz:** Every bird verse (detected chirp segment) becomes a network of square data points in 3-D space — an ever-changing generative sculpture. As a chirp plays its full chain of frames accumulates simultaneously, forming a spatial structure you can orbit and read like a score.
 
 Nothing here trains models or calls Xeno-canto; it is a **UI and pipeline sketch** aligned with the team's longer-term audio-text retrieval direction.
@@ -56,13 +56,13 @@ Wraps the tree in:
 | Path | Page component | Purpose |
 |------|----------------|---------|
 | `/` | `HomePage` | Workspace overview, upload entry, links into Query |
-| `/query` | `QueryPage` | Catalog search, upload, mock classify/similarity, results grid |
+| `/query` | `QueryPage` | Catalog search, upload, classify/similar via API, results grid |
 | `/saved` | `SavedPage` | Grid of saved `SearchResult` rows |
 | `/compare` | `ComparePage` | Two-slot side-by-side comparison |
 | `/viz/:id` | `VizPage` | Visualization: **`/viz/upload`** = user clip (`id`=`upload`). Other ids = catalog row + optional upload in context (`getResultById`) |
 | `*` | `Navigate` → `/` | Unknown paths bounce home |
 
-**Param:** `id` from the URL — use **`upload`** with an in-memory uploaded file (`AppPreferences`). Other values resolve through `getResultById`; without an upload, audio can fall back to synthetic while still showing species context.
+**Param:** `id` — **`upload`** needs an in-memory file (`AppPreferences`). Other IDs resolve via **`getResultById`** (in-memory cache + **`localStorage`** result cache **`lets-solve-it:result-cache`** + **saved list**). If metadata is cold, `/viz/:id` still renders a synthetic timeline with an on-page hint; upload audio overrides when present.
 
 ---
 
@@ -70,10 +70,12 @@ Wraps the tree in:
 
 **File:** `src/layout/AppShell.tsx`
 
-- **Brand block:** Title “Bird audio analysis” + subtitle noting client-side prototype / mock catalog.
+- **Brand block:** Title “Bird audio analysis” + subtitle · compact **API** badge (**No API**, **API…**, **API OK**, **API down**) from a lightweight `POST /api/search` probe when `VITE_API_BASE_URL` is set.
+- **Banners:** Yellow warning when the API URL is missing; red alert when the probe fails (likely down / CORS).
+- **Skip link:** keyboard “Skip to content” jumps to **`#main-content`**.
 - **Navigation:** `NavLink`s — Overview (`/`), Query, Saved, Compare. Compare shows a badge `2` when both compare slots are filled (`useAppPreferences().compareSlots`).
-- **Main:** `<Outlet />` renders the active page.
-- **Footer:** Disclaimer that embeddings and search are simulated in-browser.
+- **Main:** `<Outlet />` renders the active page (`id="main-content"`).
+- **Footer:** Short note on the viz metaphor.
 
 Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-shell__`).
 
@@ -85,7 +87,7 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 
 | UI block | Behaviour |
 |----------|-----------|
-| **Instrument strip** | Mono banner stating prototype / mock / no server. |
+| **Instrument strip** | Banner reflects whether **`VITE_API_BASE_URL`** is configured. |
 | **Page header** | “Overview” + paragraph describing the workspace. |
 | **Audio intake** | File input (`accept` audio). On change, calls `setUploadedFile` from `AppPreferences`. |
 | **Spectrogram preview** | `useSpectrogram(uploadedFile, canvas)` + `drawSpectrogramFromFile` pipeline (see §10); **`Visualization`** link to `/viz/upload` beside the spectrogram when a file is chosen. |
@@ -93,45 +95,45 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 | **Catalog search** | Link to `/query?source=dataset` — Query page reads this to seed the search field (see §6). |
 | **Taxonomic display** | Segmented control toggles `vocabMode` (`common` \| `scientific`) persisted in `localStorage` (`AppPreferences`). |
 
-**Hook:** `src/hooks/useSpectrogram.ts` — redraws when `file` or `canvas` changes; surfaces decode errors (not heavily surfaced in Home UI today).
+**Hook:** `src/hooks/useSpectrogram.ts` — redraws when `file` or `canvas` changes; decode failures show as a **`panel-alert`** on Home (and Query).
 
 ---
 
 ## 6. Feature: Query workspace
 
 **File:** `src/pages/QueryPage.tsx`  
-**API:** `src/api/mock.ts`  
+**API:** `src/api/backend.ts` (needs **`web/.env`** → **`VITE_API_BASE_URL`**)  
 **Types:** `src/api/types.ts`
 
 ### 6.1 Vocabulary mode
 
-- Same segmented control as Home: `vocabMode` affects **dataset search** string matching (common vs scientific name primary field).
+- Same segmented control as Home; `vocabMode` is sent with **`searchDataset`** for backend/context (exact semantics depend on the server).
 - Persisted key: `lets-solve-it:vocab` (see `AppPreferences.tsx`).
 
 ### 6.2 Catalog (dataset) search
 
-- Input: text search; Enter or button triggers `searchDataset(query, vocabMode)`.
-- **Mock logic:** substring match on normalized common name, scientific name, or `speciesCode`. Empty query returns full catalog filter pass; if filter is empty, returns first 8 rows (see `mock.ts`).
-- Artificial delay ~400 ms to mimic network.
-- Results rendered as `ResultCard` grid.
+- Input: text search; Enter or button triggers **`searchDataset`** → **`POST {base}/api/search`** (`top_k` 10 server-side unless changed).
+- Successful rows are **cached** into `localStorage` under **`lets-solve-it:result-cache`** via `cacheResults()` for Compare/Viz id resolution across reloads.
+- **Errored requests** show **`formatUserFacingDemoError`** copy plus **Retry search**; **rapid double-submit** guarded with in-flight refs.
+- Results rendered as **`ResultCard`** grid.
 
 **URL hint:** `?source=dataset` in `useEffect` seeds `query` to “Turdus” or “sparrow” depending on vocab mode.
 
-### 6.3 Upload and mock classification
+### 6.3 Upload and classification
 
 - File input updates `uploadedFile` and clears prior `classifyHits`.
-- **Spectrogram row:** canvas (`useSpectrogram`) + **`Visualization`** link (`/viz/upload`) shown only when a file is loaded; aligned beside the spectrogram (`.spectrogram-preview-row`).
-- **Classify button:** `classifyUpload(uploadedFile)` — **ignores file content**; returns fixed chickadee-heavy label list after ~600 ms.
-- Renders ordered list “Posterior over labels (mock)” with scores.
+- **Spectrogram row:** canvas (`useSpectrogram`) shows **Decoding spectrogram…** while busy; **`Visualization`** (`/viz/upload`) when a file exists.
+- **Classify:** **`classifyUpload`** → multipart **`POST /api/classify-audio`** (`top_k` 5).
+- Hits are **normalized**: invalid entries dropped; empty list yields a readable panel message.
 
-### 6.4 Mock similarity search
+### 6.4 Similarity search
 
-- **Search similar** button: `searchSimilarToUpload(uploadedFile)` — ignores file; returns first 6 catalog rows with descending fake `similarity` after ~500 ms.
+- **`searchSimilarToUpload`** → **`POST /api/search-by-audio`** (multipart clip + top_k).
 
 ### 6.5 Result set
 
-- Grid of `ResultCard` for current `results` state.
-- Link to `/saved` for saved list.
+- **`ResultCard`** exposes **Visualize** → `/viz/{id}`, **Compare slot** (calls **`rememberResult`**), **Save**.
+- Empty state hints link to seeded dataset query.
 
 ---
 
@@ -143,8 +145,8 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 
 - Reads `saved` array from context (derived from `loadSaved()`).
 - **Storage key:** `lets-solve-it:saved` — JSON array of `SearchResult` objects.
-- **Toggle:** implemented on `ResultCard` via `toggle(result)`; dedupes by `result.id`.
-- Empty state: short message when no rows saved.
+- **Toggle:** implemented on `ResultCard` via `toggle(result)`; dedupes by `result.id` (also calls **`rememberResult`** so ids stay in **`lets-solve-it:result-cache`**).
+- Empty state: directs user to **Query** with next-step copy.
 
 ---
 
@@ -153,12 +155,12 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 **Files:** `src/pages/ComparePage.tsx`, preferences in `AppPreferences.tsx`
 
 - **Slots:** `[string | null, string | null]` storing **result ids** (`SearchResult.id`).
-- **Add:** `ResultCard` calls `addToCompare(result.id)`:
+- **Add:** `ResultCard` calls **`rememberResult(result)`** then `addToCompare(result.id)`:
   - Fills slot A, then B; duplicates ignored; if both full, replaces slot A with new id (`CompareAddResult` enum).
   - When second slot is filled (`added_second`), card navigates to `/compare`.
-- **Resolve rows:** `getResultById` from mock catalog.
+- **Resolve rows:** **`getResultById`** merges **memory**, **`lets-solve-it:result-cache`**, then **saved** specimens.
 - **Clear:** `clearCompare()` resets both slots.
-- Empty slots show dashed placeholder copy.
+- Missing metadata (stale id) shows actionable copy + link back to **Query**.
 
 ---
 
@@ -169,11 +171,12 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 
 | Element | Description |
 |---------|-------------|
-| **Image** | `imageUrl` from mock (currently ui-avatars.com placeholder). |
+| **Image** | `imageUrl` from backend or placeholder service. |
 | **Metadata** | Common + scientific name, vocalization, duration, recording id, optional similarity %. |
 | **Spectrogram canvas** | If `spectrogramFile` prop set, draws from file; else `drawMockSpectrogram(canvas, result.id)` deterministic fake pattern. |
-| **Compare slot** | `addToCompare` (see §8). |
-| **Save** | `toggle` saved state; primary style when saved. |
+| **Visualize** | Links to `/viz/{result.id}`. |
+| **Compare slot** | `rememberResult` + `addToCompare` (see §8). |
+| **Save** | `rememberResult` + `toggle` saved state; primary style when saved. |
 
 ---
 
@@ -183,7 +186,7 @@ Styling for header/nav/footer lives in `src/index.css` (classes prefixed `app-sh
 
 - **Real file path:** decode audio with Web Audio (`AudioContext.decodeAudioData`), downmix to mono, compute magnitude STFT-like bins, draw greyscale canvas.
 - **Mock path:** hash `result.id` into a stable fake pattern for cards without upload.
-- **Errors:** Hook sets error string on failure; not all pages surface it in UI (could be improved).
+- **Errors:** Hook sets error string on failure; **Home** + **Query** show **`panel-alert`** on decode failure.
 
 Used on **Home** and **Query** for the upload preview. When a file is chosen, **`Visualization`** (link beside the spectrogram) goes to **`/viz/upload`**.
 
@@ -199,7 +202,7 @@ Used on **Home** and **Query** for the upload preview. When a file is chosen, **
 ### 11.1 Page chrome
 
 - Breadcrumb back to Query.
-- Title **Visualization**; header explains frame-wise analysis at ~60 Hz and playback-driven highlighting.
+- Title **Spatiotemporal Sound Visualization**; header explains frame-wise analysis at ~60 Hz and playback-driven highlighting.
 - **Stack:** Dark "stage" panel with stats line + WebGL canvas; below, species **footer card** (image + names + recording meta).
 - **Data guide:** Frequency color bar (violet 2 kHz → red 8 kHz) + structured legend table explaining Color/Frequency, Signal Amplitude, Emission Time, Lifetime, and Red Border indicators.
 
@@ -267,7 +270,7 @@ Each point is rendered via a custom `ShaderMaterial` using `gl_PointCoord` in th
 
 ### 11.5 Viz + upload coupling and audio playback
 
-`VizPage` passes `audioFile={uploadedFile}` from preferences.
+`VizPage` passes `audioFile={uploadedFile}` from preferences (`null` clears per global upload state).
 
 **With uploaded audio:**
 
@@ -276,10 +279,17 @@ Each point is rendered via a custom `ShaderMaterial` using `gl_PointCoord` in th
 - Volume is 70%.
 - The WebGL playhead always follows `audio.currentTime` (not wall clock).
 
-**Without uploaded audio:**
+**Catalog route (`/viz/:id`):**
 
-- Builds the same synthetic PCM used for analysis, wraps it as **16-bit mono WAV** (`syntheticAudioToWavBlob` in `audioDrivenPointCloud.ts`), and plays it through the same audio path so the viz stays locked to what you hear.
-- Object URLs are revoked on unmount / effect cleanup.
+- `seed = "${id}:${recordingId}"` when `getResultById` succeeds.
+- Seeds `catalog:${id}` when catalog metadata is **cold**, so visualization still renders; an inline advisory tells the presenter how to reload metadata (**Query**/result-card **Visualize**).
+
+**Fullscreen:** stage panel **`requestFullscreen`** + CSS `::fullscreen` tweaks (toolbar stays visible).
+
+**Without uploaded audio (any route):**
+
+- Builds the synthetic PCM backing that `seed`, wraps it as **16-bit mono WAV** (`syntheticAudioToWavBlob` in `audioDrivenPointCloud.ts`).
+- Object URLs revoked on teardown.
 
 ---
 
@@ -311,12 +321,12 @@ Any backend should aim to preserve these fields or provide adapters before the U
 
 | Area | Limitation |
 |------|------------|
-| Search | Substring only on static array; no pagination/facets. |
-| Classify / similarity | No model; fixed outputs independent of audio. |
-| Saved | Full JSON of rows in `localStorage` — size and privacy considerations. |
-| Compare | In-memory only until refresh; not deep-linked. |
-| Viz | Simplified physics of frequency estimation; bloom + additive art direction, not calibrated science viz. |
-| A11y | Viz is WebGL-heavy; labels have some ARIA on container but deep accessibility not audited. |
+| Search | Backend-defined ranking/pagination — UI renders first response batch only (`top_k` on client requests). |
+| Classify / similarity | Quality fully depends on deployed models and API wiring. |
+| Saved + cache | Full JSON blobs in **`localStorage`** — size/privacy/host-specific clearing. |
+| Compare | Slots are **React state until refresh**; rows resolve via **`result-cache`** + **saved**. |
+| Viz | Synthetic fallback when catalog metadata is cold; frequency estimate is heuristic. |
+| A11y | Viz is WebGL-heavy; baseline skip-link + alerts; dense audit optional. |
 
 ---
 
@@ -326,7 +336,10 @@ Any backend should aim to preserve these fields or provide adapters before the U
 |---------------------|--------|
 | Routes / providers | `App.tsx` |
 | Nav + footer | `layout/AppShell.tsx` |
-| Mock HTTP-shaped API | `api/mock.ts` |
+| Live demo API client | `api/backend.ts` |
+| Result-cache persistence | `api/resultCachePersistence.ts` (`lets-solve-it:result-cache`) |
+| Friendly error copy | `lib/demoErrors.ts` |
+| Offline mock catalog fixture | `api/mock.ts` |
 | Shared DTOs | `api/types.ts` |
 | Upload + vocab persistence | `context/AppPreferences.tsx` |
 | Starred list | `context/SavedContext.tsx`, `saved/savedStore.ts` |

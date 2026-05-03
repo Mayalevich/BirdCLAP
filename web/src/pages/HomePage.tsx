@@ -6,27 +6,22 @@ import { useSpectrogram } from "@/hooks/useSpectrogram";
 export function HomePage() {
   const { vocabMode, setVocabMode, uploadedFile, setUploadedFile } = useAppPreferences();
   const [specCanvas, setSpecCanvas] = useState<HTMLCanvasElement | null>(null);
-  useSpectrogram(uploadedFile, specCanvas);
+  const { error: specError } = useSpectrogram(uploadedFile, specCanvas);
 
   return (
     <div className="page home-page">
-      <p className="instrument-strip">
-        Prototype workspace · mock dataset · no server round-trip
-      </p>
       <header className="page-header">
         <h1>Overview</h1>
         <p className="muted">
-          Use this workspace to inspect uploads, run text search against a simulated catalog, and
-          switch taxonomic labels. Behaviour is deterministic in-browser; a future service could
-          replace the mock APIs without changing navigation.
+          Upload a bird recording, search the catalog by text or acoustic similarity, and open the
+          3-D visualization. Saved specimens and preferences persist in your browser.
         </p>
       </header>
 
       <section className="panel">
         <h2>Audio intake</h2>
         <p className="muted">
-          Select a recording. The waveform is decoded locally and a coarse spectrogram is rendered
-          for orientation only.
+          Select a recording. The clip is decoded in the browser and a spectrogram is drawn for orientation.
         </p>
         <div className="row gap">
           <label className="file-input">
@@ -53,13 +48,18 @@ export function HomePage() {
           </div>
           {uploadedFile ? (
             <Link to="/viz/upload" className="btn btn--outline">
-              Visualization
+              Visualize
             </Link>
           ) : null}
         </div>
+        {specError ? (
+          <p className="panel-alert panel-alert--error" role="alert">
+            {specError}
+          </p>
+        ) : null}
         <p>
           <Link to="/query" className="btn btn--primary">
-            Open query with this clip
+            Search with this clip
           </Link>
         </p>
       </section>
@@ -67,30 +67,27 @@ export function HomePage() {
       <section className="panel">
         <h2>Catalog search</h2>
         <p className="muted">
-          Run substring queries against a static mock table (species label, vocalization class,
-          duration metadata).
+          Search the bird recording catalog by species name, vocalization type, or any free-text description.
         </p>
         <Link to="/query?source=dataset" className="btn btn--primary">
-          Dataset search
+          Search catalog
         </Link>
       </section>
 
       <section className="panel">
         <h2>Classification &amp; similarity</h2>
         <p className="muted">
-          On the Query view, an uploaded clip can drive a fixed mock classifier and a mock
-          nearest-neighbour list over the same catalog.
+          Upload a clip to identify the species and find acoustically similar recordings in the catalog.
         </p>
         <Link to="/query" className="btn btn--outline">
-          Query workspace
+          Open query
         </Link>
       </section>
 
       <section className="panel">
-        <h2>Taxonomic display</h2>
+        <h2>Display names</h2>
         <p className="muted">
-          Prefer common or scientific names in search strings. Preference is persisted in{" "}
-          <code className="doc-code">localStorage</code>.
+          Choose whether species are shown by common name or scientific name throughout the app.
         </p>
         <div className="segmented" role="group" aria-label="Vocabulary mode">
           <button

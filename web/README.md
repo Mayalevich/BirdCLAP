@@ -1,7 +1,16 @@
 # Web client (`web/`)
 
-Vite + React SPA for the bird-audio **prototype workspace** (mock APIs, browser-side audio decode, Three.js viz).
+Vite + React SPA: **backend API wiring** (`VITE_API_BASE_URL`), browser-side spectrograms, Three.js visualization.
 
-**→ Start here:** [`docs/README.md`](./docs/README.md) (feature list, architecture, onboarding path for new developers).
+**→ Start here:** [`docs/README.md`](./docs/README.md)  
+**→ Demo day:** [`docs/DEMO_RUNBOOK.md`](./docs/DEMO_RUNBOOK.md)
 
-Quick start: `npm install && npm run dev` from this directory.
+Quick setup:
+
+```bash
+npm install
+cp .env.example .env   # Windows: copy .env.example .env
+npm run dev
+```
+
+Gate before presenting: **`npm run smoke`** (runs `npm run build` + contract checker).

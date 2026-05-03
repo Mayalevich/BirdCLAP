@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+﻿import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import type { SearchResult } from "@/api/types";
+import { rememberResult } from "@/api/backend";
 import { drawMockSpectrogram, drawSpectrogramFromFile } from "@/lib/spectrogramCanvas";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { useSaved } from "@/context/SavedContext";
@@ -17,6 +18,7 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
   const { toggle, isSaved } = useSaved();
   const [canvasEl, setCanvasEl] = useState<HTMLCanvasElement | null>(null);
   const saved = isSaved(result.id);
+  const imgAlt = `${result.commonName} placeholder`;
 
   useEffect(() => {
     if (!canvasEl) return;
@@ -34,8 +36,14 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
   }, [canvasEl, result.id, spectrogramFile]);
 
   const handleCompare = () => {
+    rememberResult(result);
     const r = addToCompare(result.id);
     if (r === "added_second") navigate("/compare");
+  };
+
+  const handleToggleSave = () => {
+    rememberResult(result);
+    toggle(result);
   };
 
   return (
@@ -44,7 +52,7 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
         <div className="result-card__image-wrap">
           <img
             src={result.imageUrl}
-            alt=""
+            alt={imgAlt}
             className="result-card__image"
             width={96}
             height={96}
@@ -77,13 +85,16 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
         <canvas ref={setCanvasEl} className="result-card__canvas" aria-hidden />
       </div>
       <div className="result-card__actions">
+        <Link to={`/viz/${encodeURIComponent(result.id)}`} className="btn btn--outline">
+          Visualize
+        </Link>
         <button type="button" className="btn btn--ghost" onClick={handleCompare}>
-          Compare slot
+          Compare
         </button>
         <button
           type="button"
           className={`btn ${saved ? "btn--primary" : "btn--outline"}`}
-          onClick={() => toggle(result)}
+          onClick={handleToggleSave}
           aria-pressed={saved}
         >
           {saved ? "Saved" : "Save"}

@@ -20,74 +20,82 @@ MIN_DURATION_S = 0.5
 GALLERY_BATCH = 16
 
 
+def _crop_pad(y: np.ndarray, target_len: int, min_len: int) -> np.ndarray | None:
+    if len(y) < min_len:
+        return None
+    if len(y) >= target_len:
+        start = (len(y) - target_len) // 2
+        y = y[start : start + target_len]
+    else:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y.astype(np.float32)
+
+
+def _torchaudio_load(src: str | io.BytesIO) -> tuple[np.ndarray, int] | None:
+    """Load via torchaudio (handles MP3/WAV/FLAC without soundfile/audioread)."""
+    try:
+        import torchaudio
+        wav, sr = torchaudio.load(src)  # type: ignore[arg-type]
+        if wav.shape[0] > 1:
+            wav = wav.mean(dim=0, keepdim=True)
+        return wav.squeeze(0).numpy(), sr
+    except Exception:
+        return None
+
+
 def _decode_bytes(data: bytes) -> np.ndarray | None:
     """Decode audio bytes → float32 array at 48 kHz, 10s centre-crop."""
     import librosa
-    import soundfile as sf
 
     target_len = int(CLIP_DURATION_S * TARGET_SR)
     min_len = int(MIN_DURATION_S * TARGET_SR)
 
-    try:
-        y, sr = sf.read(io.BytesIO(data), dtype="float32", always_2d=False)
-        if y.ndim > 1:
-            y = y.mean(axis=1)
+    # torchaudio handles MP3/WAV/FLAC cleanly; fall back to librosa if needed
+    result = _torchaudio_load(io.BytesIO(data))
+    if result is not None:
+        y, sr = result
         if sr != TARGET_SR:
             y = librosa.resample(y, orig_sr=sr, target_sr=TARGET_SR)
-    except Exception:
+    else:
         try:
             y, _ = librosa.load(io.BytesIO(data), sr=TARGET_SR, mono=True)
         except Exception:
             return None
 
-    if len(y) < min_len:
-        return None
-    if len(y) >= target_len:
-        start = (len(y) - target_len) // 2
-        y = y[start : start + target_len]
-    else:
-        y = np.pad(y, (0, target_len - len(y)))
-    return y.astype(np.float32)
+    return _crop_pad(y, target_len, min_len)
 
 
 def _load_file(path: Path) -> np.ndarray | None:
-    """Load audio from disk (mirrors train_clap.py fast-path logic)."""
+    """Load audio from disk — WAV fast-path via soundfile, MP3 via torchaudio."""
     import librosa
     import soundfile as sf
 
     target_len = int(CLIP_DURATION_S * TARGET_SR)
     min_len = int(MIN_DURATION_S * TARGET_SR)
 
+    # WAV fast-path: soundfile is fast and lossless
     wav_path = path.with_suffix(".wav")
     if wav_path.is_file():
         try:
             y, sr = sf.read(str(wav_path), dtype="float32", always_2d=False)
-            if sr == TARGET_SR and len(y) == target_len:
-                return y
-            if len(y) < min_len:
-                return None
-            if len(y) >= target_len:
-                start = (len(y) - target_len) // 2
-                y = y[start : start + target_len]
-            else:
-                y = np.pad(y, (0, target_len - len(y)))
-            return y.astype(np.float32)
+            if y.ndim > 1:
+                y = y.mean(axis=1)
+            if sr != TARGET_SR:
+                y = librosa.resample(y, orig_sr=sr, target_sr=TARGET_SR)
+            return _crop_pad(y, target_len, min_len)
         except Exception:
             pass
 
-    try:
-        y, _ = librosa.load(str(path), sr=TARGET_SR, mono=True)
-    except Exception:
-        return None
+    # MP3 / anything else: torchaudio handles it without audioread
+    if path.is_file():
+        result = _torchaudio_load(str(path))
+        if result is not None:
+            y, sr = result
+            if sr != TARGET_SR:
+                y = librosa.resample(y, orig_sr=sr, target_sr=TARGET_SR)
+            return _crop_pad(y, target_len, min_len)
 
-    if len(y) < min_len:
-        return None
-    if len(y) >= target_len:
-        start = (len(y) - target_len) // 2
-        y = y[start : start + target_len]
-    else:
-        y = np.pad(y, (0, target_len - len(y)))
-    return y.astype(np.float32)
+    return None
 
 
 class ClapProvider(InferenceProvider):
@@ -157,27 +165,49 @@ class ClapProvider(InferenceProvider):
 
         root = Path(audio_root)
 
-        pairs_path = Path(val_pairs_path) if val_pairs_path else Path("data/clap_val_pairs.json")
-        if not pairs_path.is_file():
-            raise FileNotFoundError(f"Val pairs JSON not found: {pairs_path}")
-
-        with open(str(pairs_path), encoding="utf-8") as f:
-            val_pairs = json.load(f)
-
-        # Metadata CSV lookup: filepath → row dict
-        meta_lookup: dict[str, dict] = {}
+        # ── Primary source: metadata CSV (covers the full dataset) ───────────────
+        # Val pairs only cover the eval split (~2k recordings); the metadata CSV
+        # covers all ~27k recordings. We build the gallery from the CSV so that
+        # every recording on disk is searchable, not just the eval subset.
+        meta_rows: list[dict] = []
         if metadata_path and Path(metadata_path).is_file():
             df = pd.read_csv(metadata_path, encoding="utf-8")
             for _, row in df.iterrows():
-                fp = str(row.get("filepath", ""))
-                meta_lookup[fp] = {
-                    "species_code": str(row.get("species_code", "")),
-                    "common_name": str(row.get("common_name", "")),
-                    "vocalization_type": str(row.get("vocalization_type", "")),
-                    "duration": str(row.get("duration", "")),
-                }
+                fp = str(row.get("filepath", "")).strip()
+                if not fp:
+                    continue
+                meta_rows.append({
+                    "audio_rel": fp,
+                    "species_code": str(row.get("species_code", "") or ""),
+                    "common_name": str(row.get("common_name", "") or ""),
+                    "vocalization_type": str(row.get("vocalization_type", "") or ""),
+                    "duration": str(row.get("duration", "") or ""),
+                })
+            log.info("Metadata CSV: %d rows -> building gallery from full dataset", len(meta_rows))
+        else:
+            # Fallback: derive candidate list from val pairs when CSV is absent
+            log.warning("Metadata CSV not found at %r — falling back to val pairs", metadata_path)
+            if not Path(val_pairs_path).is_file():
+                raise FileNotFoundError(f"Neither metadata CSV nor val pairs found")
+            with open(str(val_pairs_path), encoding="utf-8") as f:
+                val_pairs = json.load(f)
+            seen: dict[str, dict] = {}
+            for pair in val_pairs:
+                audio_rel = pair["audio"]
+                if audio_rel not in seen:
+                    combo = pair.get("combo", "")
+                    species_name, voc_type = (combo.split("||", 1) if "||" in combo else (combo, ""))
+                    seen[audio_rel] = {
+                        "audio_rel": audio_rel,
+                        "common_name": species_name,
+                        "vocalization_type": voc_type,
+                        "species_code": "",
+                        "duration": "",
+                    }
+            meta_rows = list(seen.values())
+            log.info("Val pairs fallback: %d unique recordings", len(meta_rows))
 
-        # Taxonomy lookup: common_name → scientific name
+        # ── Taxonomy lookup: common_name → scientific name ────────────────────────
         sci_lookup: dict[str, str] = {}
         if taxonomy_path and Path(taxonomy_path).is_file():
             with open(taxonomy_path, encoding="utf-8") as f:
@@ -189,20 +219,7 @@ class ClapProvider(InferenceProvider):
                     if common and sci:
                         sci_lookup[common] = sci
 
-        # Deduplicate val pairs by audio path (same file has multiple text variants)
-        seen: dict[str, dict] = {}
-        for pair in val_pairs:
-            audio_rel = pair["audio"]
-            if audio_rel not in seen:
-                combo = pair.get("combo", "")
-                if "||" in combo:
-                    species_name, voc_type = combo.split("||", 1)
-                else:
-                    species_name, voc_type = combo, ""
-                seen[audio_rel] = {"audio_rel": audio_rel, "species": species_name, "voc_type": voc_type}
-
-        unique = list(seen.values())
-        log.info("%d unique recordings from %d val pairs", len(unique), len(val_pairs))
+        log.info("Building gallery from %d candidate recordings under %s", len(meta_rows), root)
 
         wavs_batch: list[np.ndarray] = []
         meta_batch: list[dict] = []
@@ -210,7 +227,7 @@ class ClapProvider(InferenceProvider):
         all_meta: list[dict] = []
         skipped = 0
 
-        for item in unique:
+        for item in meta_rows:
             audio_rel = item["audio_rel"]
             wav = _load_file(root / audio_rel)
             if wav is None:
@@ -218,10 +235,9 @@ class ClapProvider(InferenceProvider):
                 continue
 
             recording_id = Path(audio_rel).stem
-            csv_meta = meta_lookup.get(audio_rel, {})
-            common_name = csv_meta.get("common_name") or item["species"]
-            voc_type = item["voc_type"] or csv_meta.get("vocalization_type") or ""
-            species_code = csv_meta.get("species_code") or ""
+            common_name = item["common_name"]
+            voc_type = item["vocalization_type"]
+            species_code = item["species_code"]
             sci_name = sci_lookup.get(common_name) or None
 
             meta_entry: dict[str, Any] = {
@@ -231,7 +247,7 @@ class ClapProvider(InferenceProvider):
                 "species": common_name,
                 "scientific_name": sci_name,
                 "vocalization_type": voc_type or None,
-                "duration": csv_meta.get("duration") or None,
+                "duration": item["duration"] or None,
                 "species_code": species_code or None,
                 "audio_url": None,
                 "image_url": None,
@@ -244,6 +260,7 @@ class ClapProvider(InferenceProvider):
                 all_embs.append(self._encode_audio(wavs_batch))
                 all_meta.extend(meta_batch)
                 wavs_batch, meta_batch = [], []
+                log.info("Gallery progress: %d embedded so far", len(all_meta))
 
         if wavs_batch:
             all_embs.append(self._encode_audio(wavs_batch))
@@ -255,6 +272,7 @@ class ClapProvider(InferenceProvider):
         if not all_embs:
             raise RuntimeError(f"Gallery empty — no audio loaded from {audio_root!r}")
 
+        log.info("Gallery built: %d embeddings from %d candidates", len(all_meta), len(meta_rows))
         return torch.cat(all_embs, dim=0), all_meta
 
     # ── encoding ────────────────────────────────────────────────────────────────
