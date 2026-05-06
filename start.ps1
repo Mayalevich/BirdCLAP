@@ -10,7 +10,7 @@
 
 param(
   [int]$BackendPort = 8000,
-  [string]$CheckpointPath = "checkpoints\best.pt",
+  [string]$CheckpointPath = "checkpoints\best.pt",   # matches config.py default
   [switch]$RebuildGallery,
   [switch]$DontKillListeners
 )

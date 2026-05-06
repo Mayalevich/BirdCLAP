@@ -16,5 +16,7 @@ def build_provider(settings: Settings) -> InferenceProvider:
             metadata_path=settings.metadata_path,
             taxonomy_path=settings.taxonomy_path,
             val_pairs_path=settings.val_pairs_path,
+            species_descriptions_path=settings.species_descriptions_path,
+            clap_descriptions_path=settings.clap_descriptions_path,
         )
     return PlaceholderProvider()

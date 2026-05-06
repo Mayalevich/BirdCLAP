@@ -20,3 +20,6 @@ class PlaceholderProvider(InferenceProvider):
 
     def classify_audio(self, file_bytes: bytes, filename: str, top_k: int) -> list[dict]:
         self._raise_not_ready()
+
+    def describe_audio(self, file_bytes: bytes, filename: str, top_k: int) -> list[str]:
+        self._raise_not_ready()

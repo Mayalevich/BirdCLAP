@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   classifyUpload,
@@ -9,34 +9,100 @@ import {
 import type { ClassificationHit, SearchResult } from "@/api/types";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { ResultCard } from "@/components/ResultCard";
+import { AudioWindowPicker } from "@/components/AudioWindowPicker";
 import { useSpectrogram } from "@/hooks/useSpectrogram";
+import { decodeAudioFile, sliceAudioBuffer, audioBufferToWavFile } from "@/lib/audioUtils";
+import { drawSpectrogramFromAudioBuffer } from "@/lib/spectrogramCanvas";
+
+/** Example queries drawn from acoustic descriptions and mnemonics — no species names. */
+const EXAMPLE_QUERIES = [
+  "sounds like who cooks for you",
+  "teacher teacher teacher, louder each time",
+  "drink your teeeea with a rising trill",
+  "rich melodic phrases, flute-like and varied",
+  "rapid descending trill slowing at the end",
+  "sharp raspy alarm call repeated",
+] as const;
+
+const WINDOW_S = 10;
 
 export function QueryPage() {
   const [params] = useSearchParams();
   const sourceHint = params.get("source");
 
-  const {
-    vocabMode,
-    setVocabMode,
-    uploadedFile,
-    setUploadedFile,
-  } = useAppPreferences();
+  const { vocabMode, setVocabMode, uploadedFile, setUploadedFile } = useAppPreferences();
 
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [classifyHits, setClassifyHits] = useState<ClassificationHit[] | null>(null);
   const [classifyLoading, setClassifyLoading] = useState(false);
+  const [describeHits, setDescribeHits] = useState<{ species: string; description: string }[] | null>(null);
   const [specCanvas, setSpecCanvas] = useState<HTMLCanvasElement | null>(null);
-
   const [searchError, setSearchError] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  // ── Audio window state ───────────────────────────────────────────────────────
+  const [decodedBuffer, setDecodedBuffer] = useState<AudioBuffer | null>(null);
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [windowStart, setWindowStart] = useState(0);
+  const [decoding, setDecoding] = useState(false);
+
+  const isWindowed = audioDuration !== null && audioDuration > WINDOW_S;
+
+  // Decode the uploaded file to get duration and AudioBuffer for slicing
+  useEffect(() => {
+    if (!uploadedFile) {
+      setDecodedBuffer(null);
+      setAudioDuration(null);
+      setWindowStart(0);
+      return;
+    }
+    let cancelled = false;
+    setDecoding(true);
+    decodeAudioFile(uploadedFile)
+      .then((buf) => {
+        if (!cancelled) {
+          setDecodedBuffer(buf);
+          setAudioDuration(buf.duration);
+          setWindowStart(0);
+        }
+      })
+      .catch(() => { /* spectrogram hook already handles decode errors */ })
+      .finally(() => { if (!cancelled) setDecoding(false); });
+    return () => { cancelled = true; };
+  }, [uploadedFile]);
+
+  // Draw spectrogram for the selected window (overrides the hook when windowed)
+  useEffect(() => {
+    if (!isWindowed || !decodedBuffer || !specCanvas) return;
+    const sliced = sliceAudioBuffer(decodedBuffer, windowStart, WINDOW_S);
+    drawSpectrogramFromAudioBuffer(specCanvas, sliced);
+  }, [isWindowed, decodedBuffer, windowStart, specCanvas]);
+
+  // When not windowed, use the hook for a normal full-file spectrogram
+  const { loading: specLoading, error: specError } = useSpectrogram(
+    isWindowed ? null : uploadedFile,
+    specCanvas,
+  );
+
+  // ── API helpers ──────────────────────────────────────────────────────────────
+
+  /**
+   * Return the file that CLAP should analyse — either the uploaded file
+   * directly (short clips) or a WAV slice of the selected 10-second window.
+   */
+  const getAnalysisFile = useCallback((): File | null => {
+    if (!uploadedFile) return null;
+    if (!isWindowed || !decodedBuffer) return uploadedFile;
+    const sliced = sliceAudioBuffer(decodedBuffer, windowStart, WINDOW_S);
+    const baseName = uploadedFile.name.replace(/\.[^.]+$/, "");
+    return audioBufferToWavFile(sliced, `${baseName}_window.wav`);
+  }, [uploadedFile, isWindowed, decodedBuffer, windowStart]);
 
   const searchInFlight = useRef(false);
   const similarInFlight = useRef(false);
   const classifyInFlight = useRef(false);
-
-  const { loading: specLoading, error: specError } = useSpectrogram(uploadedFile, specCanvas);
 
   useEffect(() => {
     if (sourceHint !== "dataset") return;
@@ -61,15 +127,31 @@ export function QueryPage() {
   };
 
   const runSimilarSearch = async () => {
-    if (!uploadedFile || similarInFlight.current) return;
+    const file = getAnalysisFile();
+    if (!file || similarInFlight.current) return;
     similarInFlight.current = true;
     setLoading(true);
     setUploadError(null);
     try {
-      const r = await searchSimilarToUpload(uploadedFile);
+      const r = await searchSimilarToUpload(file);
       setResults(r);
+      // Derive "What CLAP heard" from top unique species in the result set.
+      // This is always consistent with the similarity search because it IS
+      // the same ranking — no cross-modal mismatch possible.
+      const seen = new Set<string>();
+      const descs: { species: string; description: string }[] = [];
+      for (const item of r) {
+        const key = item.commonName || item.id;
+        if (!seen.has(key) && item.speciesDescription) {
+          seen.add(key);
+          descs.push({ species: item.commonName || key, description: item.speciesDescription });
+        }
+        if (descs.length >= 4) break;
+      }
+      setDescribeHits(descs.length ? descs : null);
     } catch (err) {
       setResults([]);
+      setDescribeHits(null);
       setUploadError(formatUserFacingDemoError(err));
     } finally {
       setLoading(false);
@@ -78,12 +160,13 @@ export function QueryPage() {
   };
 
   const runClassify = async () => {
-    if (!uploadedFile || classifyInFlight.current) return;
+    const file = getAnalysisFile();
+    if (!file || classifyInFlight.current) return;
     classifyInFlight.current = true;
     setClassifyLoading(true);
     setUploadError(null);
     try {
-      const h = await classifyUpload(uploadedFile);
+      const h = await classifyUpload(file);
       setClassifyHits(h.length ? h : null);
       if (!h.length) setUploadError("Classification returned no labels. Check the API response.");
     } catch (err) {
@@ -100,8 +183,8 @@ export function QueryPage() {
       <header className="page-header">
         <h1>Query workspace</h1>
         <p className="muted">
-          Search the catalog by text, upload a clip for species classification, or find acoustically
-          similar recordings.
+          Text search binds natural language to audio via shared CLAP embeddings. Upload a clip to classify against
+          label space and retrieve nearest neighbors by acoustic similarity.
         </p>
       </header>
 
@@ -124,20 +207,23 @@ export function QueryPage() {
           </button>
         </div>
         <p className="muted small">
-          Passed as context to the backend search query (for example “Turdus” vs “robin”).
+          Passed as context to the backend search query (for example "Turdus" vs "robin").
         </p>
       </section>
 
       <section className="panel">
         <h2>Catalog search</h2>
+        <p className="muted small">
+          Type a species name <em>or describe the sound</em> — CLAP understands acoustic language.
+        </p>
         <div className="row gap wrap">
           <input
             type="search"
             className="input"
             placeholder={
               vocabMode === "scientific"
-                ? "Try Turdus, Poecile, …"
-                : "Try sparrow, chickadee, …"
+                ? 'Try Turdus, or "descending flute-like phrases"\u2026'
+                : 'Try "raspy alarm call" or "who cooks for you"\u2026'
             }
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -145,13 +231,26 @@ export function QueryPage() {
             onKeyDown={(e) => e.key === "Enter" && runDatasetSearch()}
           />
           <button type="button" className="btn btn--primary" onClick={runDatasetSearch} disabled={loading}>
-            {loading ? "Searching…" : "Search dataset"}
+            {loading ? "Searching…" : "Search"}
           </button>
           {searchError ? (
             <button type="button" className="btn btn--outline" onClick={runDatasetSearch} disabled={loading}>
-              Retry search
+              Retry
             </button>
           ) : null}
+        </div>
+        <div className="query-examples" aria-label="Example queries">
+          <span className="query-examples__label">Try:</span>
+          {EXAMPLE_QUERIES.map((q) => (
+            <button
+              key={q}
+              type="button"
+              className="query-chip"
+              onClick={() => setQuery(q)}
+            >
+              {q}
+            </button>
+          ))}
         </div>
         {searchError ? (
           <p className="panel-alert panel-alert--error" id="query-search-error" role="alert">
@@ -161,7 +260,7 @@ export function QueryPage() {
       </section>
 
       <section className="panel">
-        <h2>Upload &amp; classifier output</h2>
+        <h2>Upload &amp; CLAP outputs</h2>
         <div className="row gap wrap">
           <label className="file-input">
             <input
@@ -171,6 +270,7 @@ export function QueryPage() {
                 const f = e.target.files?.[0];
                 setUploadedFile(f ?? null);
                 setClassifyHits(null);
+                setDescribeHits(null);
                 setUploadError(null);
               }}
             />
@@ -180,7 +280,7 @@ export function QueryPage() {
           <button
             type="button"
             className="btn btn--outline"
-            disabled={!uploadedFile || classifyLoading}
+            disabled={!uploadedFile || classifyLoading || decoding}
             onClick={runClassify}
           >
             {classifyLoading ? "Classifying…" : "Classify audio"}
@@ -188,19 +288,14 @@ export function QueryPage() {
           <button
             type="button"
             className="btn btn--primary"
-            disabled={!uploadedFile || loading}
+            disabled={!uploadedFile || loading || decoding}
             onClick={runSimilarSearch}
           >
             {loading ? "Searching…" : "Search similar"}
           </button>
           {uploadError ? (
             <>
-              <button
-                type="button"
-                className="btn btn--outline"
-                disabled={classifyLoading}
-                onClick={runClassify}
-              >
+              <button type="button" className="btn btn--outline" disabled={classifyLoading} onClick={runClassify}>
                 Retry classify
               </button>
               <button type="button" className="btn btn--outline" disabled={loading} onClick={runSimilarSearch}>
@@ -209,17 +304,33 @@ export function QueryPage() {
             </>
           ) : null}
         </div>
+
+        {/* Window picker — only visible for recordings longer than 10 s */}
+        {isWindowed && uploadedFile && audioDuration ? (
+          <AudioWindowPicker
+            file={uploadedFile}
+            duration={audioDuration}
+            windowStart={windowStart}
+            onChange={setWindowStart}
+          />
+        ) : null}
+
         <div className="spectrogram-preview-row">
           <div className="spectrogram-preview">
             <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Upload spectrogram" />
           </div>
           {uploadedFile ? (
-            <Link to="/viz/upload" className="btn btn--outline">
-              Visualization
+            <Link to="/viz/upload" className="btn btn--outline btn--narrow">
+              3-D sound map
             </Link>
           ) : null}
         </div>
-        {specLoading ? <p className="muted small">Decoding spectrogram…</p> : null}
+        {(specLoading || decoding) ? <p className="muted small">Decoding audio…</p> : null}
+        {isWindowed ? (
+          <p className="muted small window-picker__spec-note">
+            Spectrogram shows the selected 10 s window.
+          </p>
+        ) : null}
         {uploadError ? (
           <p className="panel-alert panel-alert--error" role="alert">
             {uploadError}
@@ -244,6 +355,25 @@ export function QueryPage() {
                 </li>
               ))}
             </ol>
+          </div>
+        ) : null}
+        {describeHits && describeHits.length > 0 ? (
+          <div className="model-heard" role="region" aria-label="What CLAP heard">
+            <h3 className="model-heard__heading">
+              <span className="model-heard__icon" aria-hidden>◈</span>
+              What CLAP heard
+            </h3>
+            <p className="model-heard__note muted small">
+              Acoustic profiles of the closest-matching species, in similarity order.
+            </p>
+            <ul className="model-heard__list">
+              {describeHits.map(({ species, description }, i) => (
+                <li key={i} className="model-heard__item">
+                  <span className="model-heard__species">{species}</span>
+                  <span className="model-heard__desc">{description}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         ) : null}
       </section>

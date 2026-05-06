@@ -21,4 +21,6 @@ export interface SearchResult {
   /** Placeholder image (deterministic mock). */
   imageUrl: string;
   audioUrl?: string;
+  /** First 1-2 sentences from the AllAboutBirds / ADW vocalization description. */
+  speciesDescription?: string;
 }

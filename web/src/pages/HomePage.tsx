@@ -13,15 +13,17 @@ export function HomePage() {
       <header className="page-header">
         <h1>Overview</h1>
         <p className="muted">
-          Upload a bird recording, search the catalog by text or acoustic similarity, and open the
-          3-D visualization. Saved specimens and preferences persist in your browser.
+          Upload a recording and run CLAP-backed species classification and acoustic similarity against the catalog.
+          Search by text aligns audio with language in the same embedding space. Saved specimens and preferences stay
+          in your browser.
         </p>
       </header>
 
-      <section className="panel">
+      <section className="panel panel--intake">
         <h2>Audio intake</h2>
         <p className="muted">
-          Select a recording. The clip is decoded in the browser and a spectrogram is drawn for orientation.
+          Choose a clip for the embedding pipeline. A quick spectrogram preview is computed locally—model calls run on
+          the backend when you classify or search.
         </p>
         <div className="row gap">
           <label className="file-input">
@@ -40,15 +42,27 @@ export function HomePage() {
           ) : null}
         </div>
         <div className="spectrogram-preview-row">
-          <div className="spectrogram-preview">
-            <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Spectrogram preview" />
+          <div className={`spectrogram-preview${uploadedFile ? "" : " spectrogram-preview--idle"}`}>
+            {uploadedFile ? (
+              <canvas ref={setSpecCanvas} width={320} height={96} aria-label="Spectrogram preview" />
+            ) : (
+              <div className="spectrogram-preview__idle" aria-hidden>
+                <div className="spectrogram-preview__wave-bars">
+                  {[12, 20, 8, 24, 14, 28, 10, 22, 16, 18, 6, 20].map((h, i) => (
+                    <span key={i} className="spectrogram-preview__bar" style={{ height: `${h}px` }} />
+                  ))}
+                </div>
+              </div>
+            )}
             {!uploadedFile ? (
-              <p className="muted spectrogram-preview__hint">Spectrogram appears after you choose a file.</p>
+              <p className="muted spectrogram-preview__hint">
+                Pick a file to decode the waveform. CLAP embeddings are built when you search or classify.
+              </p>
             ) : null}
           </div>
           {uploadedFile ? (
-            <Link to="/viz/upload" className="btn btn--outline">
-              Visualize
+            <Link to="/viz/upload" className="btn btn--outline btn--narrow">
+              3-D sound map
             </Link>
           ) : null}
         </div>
@@ -57,11 +71,11 @@ export function HomePage() {
             {specError}
           </p>
         ) : null}
-        <p>
-          <Link to="/query" className="btn btn--primary">
+        <div className="audio-intake__cta">
+          <Link to="/query" className="btn btn--primary btn--cta-primary">
             Search with this clip
           </Link>
-        </p>
+        </div>
       </section>
 
       <section className="panel">
@@ -75,9 +89,10 @@ export function HomePage() {
       </section>
 
       <section className="panel">
-        <h2>Classification &amp; similarity</h2>
+        <h2>CLAP classification &amp; similarity</h2>
         <p className="muted">
-          Upload a clip to identify the species and find acoustically similar recordings in the catalog.
+          The backend scores your clip against label text and compares embedding space neighbors to rank similar
+          recordings.
         </p>
         <Link to="/query" className="btn btn--outline">
           Open query

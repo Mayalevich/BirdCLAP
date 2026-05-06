@@ -2,19 +2,19 @@
 
 ## Overview
 
-The backend is a **FastAPI service** that wraps a fine-tuned CLAP model behind three HTTP endpoints. The ML layer is fully swappable via a provider interface: the placeholder stub (used in development) and the real `ClapProvider` both implement the same `InferenceProvider` abstract class, so swapping them requires only an environment variable change.
+The backend is a **FastAPI service** that wraps the fine-tuned CLAP model behind HTTP endpoints. The ML layer is swappable via a provider interface: `PlaceholderProvider` (dev stub) and `ClapProvider` (real inference) both implement the same `InferenceProvider` abstract class.
 
 ```
 HTTP request
     │
     ▼
 FastAPI (backend/app.py)
-    │  validates request shape via Pydantic schemas
+    │  Pydantic request validation
+    │  startup: audio file map built independently (no model needed)
     ▼
 InferenceProvider (backend/providers/base.py)
-    │  abstract interface: search_text / search_by_audio / classify_audio
-    ├─ PlaceholderProvider  →  returns 501 Not Implemented
-    └─ ClapProvider         →  runs fine-tuned CLAP model
+    ├─ PlaceholderProvider  → 501 Not Implemented
+    └─ ClapProvider         → fine-tuned CLAP model
 ```
 
 ---
@@ -23,86 +23,139 @@ InferenceProvider (backend/providers/base.py)
 
 | File | Role |
 |------|------|
-| `backend/app.py` | FastAPI app, route handlers, CORS, error handler |
-| `backend/config.py` | Reads all env vars into a frozen `Settings` dataclass |
-| `backend/provider_factory.py` | Selects and constructs the right provider at startup |
+| `backend/app.py` | FastAPI app, route handlers, CORS, startup audio map |
+| `backend/config.py` | Reads env vars into frozen `Settings` dataclass |
+| `backend/provider_factory.py` | Selects and constructs the active provider at startup |
 | `backend/schemas.py` | Pydantic request/response models |
-| `backend/errors.py` | `BackendError` exception (carries HTTP status, code, message) |
+| `backend/errors.py` | `BackendError` exception (HTTP status + code + message) |
 | `backend/providers/base.py` | `InferenceProvider` abstract class |
-| `backend/providers/placeholder.py` | Stub — always raises 501 |
+| `backend/providers/placeholder.py` | Dev stub — always raises 501 |
 | `backend/providers/clap_provider.py` | Real CLAP model inference |
 
 ---
 
 ## API Endpoints
 
-All inference endpoints return `501` when running with the placeholder provider and the structured error response when the CLAP provider fails to decode audio.
+All inference endpoints return `501` when running with the placeholder provider, and the structured error response when CLAP fails to decode audio.
 
 ### `GET /health`
-Returns the service status and active provider name.
+
+Returns service status, active provider, and audio file index count.
 
 ```json
-{ "status": "ok", "provider": "clap" }
+{
+  "status": "ok",
+  "provider": "clap",
+  "audio_files_indexed": 17432
+}
 ```
 
+`audio_files_indexed` reflects the startup audio map scan — this is populated even before the CLAP model loads.
+
+### `GET /api/audio/{recording_id}`
+
+Streams the audio file for a recording. Returns the full MP3 (preferred) or WAV with `Accept-Ranges` headers for seeking.
+
+- **Never stalls on model load** — reads from the startup audio map built at FastAPI startup.
+- Returns `404` if no file found for that ID.
+- Supports range requests for the browser's `<audio>` element.
+
 ### `POST /api/search`
-Text-to-audio retrieval. Encodes the query string with the CLAP text encoder, computes cosine similarity against the pre-built audio gallery, returns the top-k recordings.
+
+Text-to-catalog retrieval via **text-to-text species matching** (not cross-modal text→audio).
 
 **Request body (JSON):**
 ```json
-{ "query": "Northern Cardinal call", "top_k": 10 }
+{ "query": "sharppeeknote lower than Downy Woodpecker", "top_k": 10 }
 ```
 
 **Response:**
 ```json
 {
-  "query": "Northern Cardinal call",
+  "query": "sharppeeknote lower than Downy Woodpecker",
   "count": 10,
   "results": [
     {
-      "id": "256526",
-      "title": "Northern Cardinal call",
-      "species": "Northern Cardinal",
-      "score": 0.8421,
-      "recording_id": "256526",
-      "scientific_name": "Cardinalis cardinalis",
+      "id": "112580",
+      "title": "Hairy Woodpecker call",
+      "species": "Hairy Woodpecker",
+      "scientific_name": "Dryobates villosus",
       "vocalization_type": "call",
-      "duration": "0:12",
-      "species_code": "northern_cardinal",
+      "duration": "1:36",
+      "species_code": "HAWO",
+      "score": 0.7230,
+      "audio_url": "/api/audio/112580",
       "image_url": null,
-      "audio_url": null
+      "species_description": "The most common call is a short, sharppeeknote…"
     }
   ]
 }
 ```
 
-### `POST /api/search-by-audio`
-Audio-to-audio retrieval. Accepts a multipart file upload, encodes it with the CLAP audio encoder, returns the top-k similar recordings from the gallery.
+**How it works internally:**
 
-**Request:** `multipart/form-data` with a field named `file` (WAV or MP3). The `top_k` query parameter (default 10) controls result count.
+1. Query encoded as text by the CLAP text encoder.
+2. Cosine similarity against `_species_text_embs` — text embeddings of every species' `"Name — description"` string.
+3. Top-N species by text-to-text similarity.
+4. Up to 2 recordings per species returned from the gallery.
+
+Cross-modal text→audio comparison is **not used** — fine-tuning shifted the audio embedding space away from where the text encoder expects it.
+
+### `POST /api/search-by-audio`
+
+Audio-to-audio similarity search.
+
+**Request:** `multipart/form-data` with field `file` (WAV or MP3). Optional `top_k` query param (default 10).
+
+**Audio processing:**
+1. Decode bytes → mono float32 at 48 kHz.
+2. Centre-crop (or zero-pad) to exactly 10 seconds — matches the gallery encoding strategy.
+3. CLAP audio encoder → L2-normalised [1, D] embedding.
+4. Cosine similarity against gallery [N, D].
+5. Top-k results with `audio_url` and `species_description`.
 
 **Response:** Same shape as `/api/search`.
 
 ### `POST /api/classify-audio`
-Species classification. Encodes the uploaded audio, scores it against every species in the gallery, and returns the top-k species by maximum similarity.
 
-**Request:** Same multipart upload as `/api/search-by-audio`.
+Species classification. Same encoding as `search-by-audio`; groups by species and returns the top-k species by maximum similarity score.
+
+**Request:** Same multipart upload.
 
 **Response:**
 ```json
 {
   "count": 5,
   "results": [
-    { "label": "Northern Cardinal", "scientificName": "Cardinalis cardinalis", "score": 0.7814 },
-    { "label": "House Finch",       "scientificName": "Haemorhous mexicanus",  "score": 0.5102 }
+    { "label": "Hairy Woodpecker", "scientificName": "Dryobates villosus", "score": 0.8142 },
+    { "label": "Downy Woodpecker", "scientificName": "Dryobates pubescens",  "score": 0.7601 }
+  ]
+}
+```
+
+### `POST /api/describe-audio`
+
+Returns acoustic descriptions for the species acoustically nearest to the uploaded audio. Used to power the "What CLAP heard" UI panel.
+
+**Request:** Same multipart upload.
+
+**How it works:** Routes through `_top_k` (same audio→audio path as `search-by-audio`), collects the top unique species, then returns their `_desc_map` entries. Does **not** use cross-modal text-to-audio comparison.
+
+**Response:**
+```json
+{
+  "descriptions": [
+    "The most common call is a short, sharppeeknote very similar to Downy Woodpeckers…",
+    "A loud, sharp peek call repeated rapidly; also a long descending whinny rattle…"
   ]
 }
 ```
 
 ### Error response shape
+
 All errors return this body regardless of HTTP status:
 ```json
-{ "code": "MODEL_NOT_CONNECTED", "message": "Human-readable description." }
+{ "code": "AUDIO_DECODE_FAILED", "message": "Human-readable description." }
 ```
 
 Common codes: `MODEL_NOT_CONNECTED` (501), `AUDIO_DECODE_FAILED` (422).
@@ -113,115 +166,93 @@ Common codes: `MODEL_NOT_CONNECTED` (501), `AUDIO_DECODE_FAILED` (422).
 
 ### Startup sequence
 
-1. **Load processor and model** from the HuggingFace base checkpoint (`laion/clap-htsat-fused`).
-2. **Load fine-tuned weights** from the `.pt` checkpoint file. Only `model_state` is restored — optimizer and scheduler state is ignored. Missing/unexpected keys are logged as warnings.
-3. **Build or load the gallery.**
+When the first API call triggers model load:
 
-The gallery is the retrieval database. On the first run it is built by:
-- Reading every unique audio path from `clap_val_pairs.json`.
-- Loading each audio file from disk (same fast-path logic as `train_clap.py`: prefers the pre-clipped `.wav` sibling, falls back to librosa MP3 decoding).
-- Running audio through the CLAP audio encoder in batches of 16.
-- Saving `{"embeddings": FloatTensor[N, D], "items": [metadata…]}` to the gallery cache file.
+1. **Load processor and model** from HuggingFace (`laion/clap-htsat-fused`).
+2. **Load fine-tuned weights** from `checkpoints/best.pt` (strict=False; missing/unexpected keys logged as warnings).
+3. **Load or build gallery:**
+   - If `data/gallery_embeddings.pt` exists and `cache_version` matches `CACHE_VERSION`, load it (~1 second).
+   - Otherwise, build from scratch: read `xc_metadata_unified.csv`, load each audio file (WAV sidecar if present, MP3 fallback), encode in batches, save.
+4. **Build audio path map** (`_audio_map`): scan gallery metadata for known paths; fallback to directory stem scan. MP3 preferred over WAV.
+5. **Load species descriptions** from `species_descriptions.json` → `_desc_map`.
+6. **Build species index** (`_species_to_indices`): `{species_name_lower: [meta_index, ...]}` for text search routing.
+7. **Build acoustic text gallery** from `clap_descriptions.json` → `_text_embs` / `_text_strings` (for `describe_audio`).
+8. **Build species text gallery** from `_desc_map` → `_species_text_embs` / `_species_names_list` (for `search_text`).
 
-On subsequent runs the cache is loaded directly — no audio files or model inference needed at startup.
+**Separately (at FastAPI startup, before model load):**
+- `_build_startup_audio_map()` scans `audio_root` for all `.mp3`, `.wav`, `.ogg`, `.flac` files by stem. This makes `/api/audio/{id}` fast and available immediately.
 
-### Text query encoding (`search_text`)
-
-```
-query string
-    │ ClapProcessor.tokenize
-    ▼
-BERT text encoder → pooler_output → L2 normalize → [1, D] query embedding
-    │ cosine similarity against gallery [N, D]
-    ▼
-argsort → top-k indices → metadata lookup → SearchResultItem list
-```
-
-### Audio query encoding (`search_by_audio`, `classify_audio`)
+### Audio encoding pipeline
 
 ```
-uploaded bytes
-    │ soundfile (fast, WAV) or librosa (MP3 fallback)
-    │ resample to 48 kHz, mono
-    │ centre-crop or zero-pad to 10 s
-    ▼
-ClapProcessor → mel-spectrogram → HTSAT audio encoder → pooler_output → L2 normalize
-    │ cosine similarity against gallery [N, D]
-    ▼
-top-k recordings  (search_by_audio)
-  OR
-group by species → max sim per species → top-k species  (classify_audio)
+uploaded bytes / file on disk
+  │ torchaudio.load (preferred, handles MP3/WAV without audioread)
+  │ fallback: librosa.load
+  │ resample to 48 kHz, downmix to mono
+  │ centre-crop OR zero-pad to exactly 10 seconds
+  │   (ONLY for embeddings — serving uses full file)
+  ▼
+ClapProcessor → mel-spectrogram input
+  ▼
+HTSAT audio encoder → pooler_output
+  ▼
+L2 normalise → [1, D] embedding
 ```
 
-### Gallery item metadata
+### Why centre-crop (not full-duration fusion)
 
-Each gallery item is a dict that maps directly to `SearchResultItem`:
+The checkpoint was fine-tuned on 10-second WAV sidecars. Full-duration fusion (`is_longer=True`) produces embeddings in a different region of the space — gallery embeddings built with 10-second crops and query embeddings built with full-duration fusion are incompatible. Both must use the same strategy.
+
+### Gallery cache versioning
+
+```python
+CACHE_VERSION = 2  # v1=centre-crop-10s (original), v2=10s WAV sidecars + this crop
+```
+
+If the loaded cache has a different version, the provider logs a warning and rebuilds automatically. Bump `CACHE_VERSION` whenever you change `_decode_bytes` or `_load_file`.
+
+### Gallery item metadata schema
 
 | Field | Source |
 |-------|--------|
 | `id`, `recording_id` | Filename stem of the audio path (e.g. `"256526"`) |
 | `title` | `"{common_name} {vocalization_type}"` |
-| `species` | Common name from metadata CSV, fallback from val pairs combo |
-| `scientific_name` | Looked up from `species_taxonomy.json` by common name |
-| `vocalization_type` | From val pairs combo or metadata CSV |
+| `species` | `common_name` from metadata CSV |
+| `scientific_name` | Looked up from `species_taxonomy.json` |
+| `vocalization_type` | From metadata CSV |
 | `duration` | From metadata CSV |
 | `species_code` | From metadata CSV |
-| `audio_url`, `image_url` | Always `null` (not served by backend; future work) |
+| `audio_rel` | Relative path stored in cache for `_build_audio_map` |
+| `audio_url` | Set to `/api/audio/{id}` in `_top_k` if file exists on disk |
+| `species_description` | From `_desc_map` — attached in `_top_k` |
 
 ---
 
 ## Configuration Reference
 
-All configuration is via environment variables. The `Settings` dataclass in `backend/config.py` holds all values; no mutable state at module level.
+All configuration is via environment variables. `Settings` in `backend/config.py` holds all values.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MODEL_PROVIDER` | `placeholder` | Set to `clap` to enable the real model |
-| `CORS_ORIGIN` | `http://localhost:5173` | Frontend origin allowed by CORS |
-| `CHECKPOINT_PATH` | `checkpoints/finetune11/best_r1.pt` | Path to the fine-tuned `.pt` checkpoint |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173,…` | Comma-separated allowed origins |
+| `CHECKPOINT_PATH` | `checkpoints/best.pt` | Fine-tuned `.pt` checkpoint |
 | `AUDIO_ROOT` | `scripts/data/xc_audio` | Root directory containing `.mp3` / `.wav` files |
-| `GALLERY_CACHE` | `data/gallery_embeddings.pt` | Where gallery embeddings are saved/loaded |
-| `BASE_MODEL` | `laion/clap-htsat-fused` | HuggingFace model ID for base weights |
-| `METADATA_PATH` | `data/xc_metadata_unified.csv` | Metadata CSV (species, duration, etc.) |
-| `TAXONOMY_PATH` | `data/species_taxonomy.json` | Taxonomy JSON for scientific names |
-| `VAL_PAIRS_PATH` | `data/clap_val_pairs.json` | Val pairs JSON (defines the gallery) |
+| `GALLERY_CACHE` | `data/gallery_embeddings.pt` | Gallery save/load path |
+| `BASE_MODEL` | `laion/clap-htsat-fused` | HuggingFace model ID |
+| `METADATA_PATH` | `data/xc_metadata_unified.csv` | Master catalog CSV |
+| `TAXONOMY_PATH` | `data/species_taxonomy.json` | Scientific name lookup |
+| `VAL_PAIRS_PATH` | `data/clap_val_pairs.json` | Fallback gallery source (if CSV absent) |
+| `SPECIES_DESCRIPTIONS_PATH` | `data/species_descriptions.json` | Per-species acoustic descriptions |
+| `CLAP_DESCRIPTIONS_PATH` | `data/clap_descriptions.json` | Training-corpus descriptions |
 
 ---
 
 ## Adding a New Provider
 
 1. Create `backend/providers/your_provider.py` implementing `InferenceProvider`.
-2. Add an `elif settings.model_provider == "yourname":` branch in `backend/provider_factory.py`.
-3. Add any required env vars to `backend/config.py` `Settings`.
+2. Add `elif settings.model_provider == "yourname":` in `backend/provider_factory.py`.
+3. Add required env vars to `backend/config.py`.
 4. Set `MODEL_PROVIDER=yourname` and start the server.
 
-The HTTP layer, request validation, and response serialization are untouched.
-
----
-
-## Gallery Cache
-
-The gallery cache (`data/gallery_embeddings.pt`) is a plain `torch.save` dict:
-
-```python
-{
-    "embeddings": torch.FloatTensor,  # shape [N, embedding_dim]
-    "items": [                        # length N, same order as embeddings
-        {
-            "id": str,
-            "recording_id": str,
-            "title": str,
-            "species": str,
-            "scientific_name": str | None,
-            "vocalization_type": str | None,
-            "duration": str | None,
-            "species_code": str | None,
-            "audio_url": None,
-            "image_url": None,
-        },
-        ...
-    ]
-}
-```
-
-The cache is model-specific. If you load a different checkpoint or change the base model, delete the cache file so it is rebuilt with the new weights.
+HTTP layer, request validation, and response serialisation are untouched.

@@ -25,6 +25,7 @@ class SearchResultItem(BaseModel):
     image_url: str | None = None
     audio_url: str | None = None
     species_code: str | None = None
+    species_description: str | None = None
 
 
 class SearchResponse(BaseModel):
@@ -42,3 +43,7 @@ class ClassificationHit(BaseModel):
 class ClassificationResponse(BaseModel):
     count: int
     results: list[ClassificationHit]
+
+
+class DescribeAudioResponse(BaseModel):
+    descriptions: list[str]

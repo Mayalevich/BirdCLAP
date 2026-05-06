@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
@@ -15,20 +16,15 @@ from backend.providers.base import InferenceProvider
 log = logging.getLogger(__name__)
 
 TARGET_SR = 48_000
-CLIP_DURATION_S = 10.0
+CLIP_DURATION_S = 10.0   # must match what the gallery was built with (10-s WAV sidecars)
 MIN_DURATION_S = 0.5
-GALLERY_BATCH = 16
+GALLERY_BATCH = 8
 
-
-def _crop_pad(y: np.ndarray, target_len: int, min_len: int) -> np.ndarray | None:
-    if len(y) < min_len:
-        return None
-    if len(y) >= target_len:
-        start = (len(y) - target_len) // 2
-        y = y[start : start + target_len]
-    else:
-        y = np.pad(y, (0, target_len - len(y)))
-    return y.astype(np.float32)
+# Bump this whenever the encoding strategy changes so stale caches are detected
+# and automatically rebuilt rather than producing silent wrong results.
+# v1 = centre-crop-10s (original)
+# v2 = 10-s WAV sidecars loaded, query also centre-cropped to match
+CACHE_VERSION = 2
 
 
 def _torchaudio_load(src: str | io.BytesIO) -> tuple[np.ndarray, int] | None:
@@ -43,14 +39,29 @@ def _torchaudio_load(src: str | io.BytesIO) -> tuple[np.ndarray, int] | None:
         return None
 
 
+def _crop_pad(y: np.ndarray, target_len: int, min_len: int) -> np.ndarray | None:
+    """Centre-crop or zero-pad to exactly target_len samples."""
+    if len(y) < min_len:
+        return None
+    if len(y) >= target_len:
+        start = (len(y) - target_len) // 2
+        y = y[start : start + target_len]
+    else:
+        y = np.pad(y, (0, target_len - len(y)))
+    return y.astype(np.float32)
+
+
 def _decode_bytes(data: bytes) -> np.ndarray | None:
-    """Decode audio bytes → float32 array at 48 kHz, 10s centre-crop."""
+    """Decode audio bytes → float32 mono 10-second centre-crop at 48 kHz.
+
+    Matches the encoding used when the gallery was built (10-s WAV sidecars),
+    so query and gallery embeddings live in the same space.
+    """
     import librosa
 
     target_len = int(CLIP_DURATION_S * TARGET_SR)
     min_len = int(MIN_DURATION_S * TARGET_SR)
 
-    # torchaudio handles MP3/WAV/FLAC cleanly; fall back to librosa if needed
     result = _torchaudio_load(io.BytesIO(data))
     if result is not None:
         y, sr = result
@@ -66,11 +77,14 @@ def _decode_bytes(data: bytes) -> np.ndarray | None:
 
 
 def _load_file(path: Path) -> np.ndarray | None:
-    """Load audio from disk — WAV fast-path via soundfile, MP3 via torchaudio."""
+    """Load audio from disk — WAV fast-path via soundfile, MP3 via torchaudio.
+
+    Returns the full waveform (no cropping) so the CLAP processor can set
+    ``is_longer=True`` and invoke the fusion path for long recordings.
+    """
     import librosa
     import soundfile as sf
 
-    target_len = int(CLIP_DURATION_S * TARGET_SR)
     min_len = int(MIN_DURATION_S * TARGET_SR)
 
     # WAV fast-path: soundfile is fast and lossless
@@ -82,7 +96,9 @@ def _load_file(path: Path) -> np.ndarray | None:
                 y = y.mean(axis=1)
             if sr != TARGET_SR:
                 y = librosa.resample(y, orig_sr=sr, target_sr=TARGET_SR)
-            return _crop_pad(y, target_len, min_len)
+            if len(y) < min_len:
+                return None
+            return y.astype(np.float32)
         except Exception:
             pass
 
@@ -93,9 +109,29 @@ def _load_file(path: Path) -> np.ndarray | None:
             y, sr = result
             if sr != TARGET_SR:
                 y = librosa.resample(y, orig_sr=sr, target_sr=TARGET_SR)
-            return _crop_pad(y, target_len, min_len)
+            if len(y) < min_len:
+                return None
+            return y.astype(np.float32)
 
     return None
+
+
+def _truncate_description(text: str, max_chars: int = 280) -> str:
+    """Return first 1-2 sentences of text, capped at max_chars."""
+    text = text.strip()
+    sentences = re.split(r"(?<=[.!?])\s+", text)
+    out = ""
+    for s in sentences:
+        candidate = f"{out} {s}".strip() if out else s
+        if len(candidate) <= max_chars:
+            out = candidate
+        else:
+            break
+    if not out:
+        out = text[:max_chars].rstrip()
+    if len(text) > len(out):
+        out = out.rstrip(".,;:") + "…"
+    return out
 
 
 class ClapProvider(InferenceProvider):
@@ -108,6 +144,8 @@ class ClapProvider(InferenceProvider):
         metadata_path: str = "",
         taxonomy_path: str = "",
         val_pairs_path: str = "",
+        species_descriptions_path: str = "",
+        clap_descriptions_path: str = "",
     ) -> None:
         from transformers import ClapModel, ClapProcessor
 
@@ -133,13 +171,26 @@ class ClapProvider(InferenceProvider):
         self.model.eval().to(self.device)
 
         cache_path = Path(gallery_cache)
+        _use_cache = False
         if cache_path.is_file():
-            log.info("Loading gallery cache from %s", cache_path)
             cached = torch.load(str(cache_path), map_location="cpu", weights_only=False)
-            self._embs: torch.Tensor = cached["embeddings"]
-            self._meta: list[dict] = cached["items"]
-        else:
-            log.info("Building gallery — this may take several minutes")
+            if cached.get("cache_version", 1) == CACHE_VERSION:
+                log.info("Loading gallery cache v%d from %s", CACHE_VERSION, cache_path)
+                self._embs: torch.Tensor = cached["embeddings"]
+                self._meta: list[dict] = cached["items"]
+                _use_cache = True
+            else:
+                old_ver = cached.get("cache_version", 1)
+                log.warning(
+                    "Gallery cache is v%d but current encoding is v%d — "
+                    "discarding stale cache and rebuilding.  "
+                    "This ensures full-duration fusion embeddings replace the old "
+                    "centre-crop-10s embeddings.",
+                    old_ver, CACHE_VERSION,
+                )
+
+        if not _use_cache:
+            log.info("Building gallery (v%d) — this may take several minutes", CACHE_VERSION)
             self._embs, self._meta = self._build_gallery(
                 audio_root=audio_root,
                 val_pairs_path=val_pairs_path,
@@ -147,10 +198,197 @@ class ClapProvider(InferenceProvider):
                 taxonomy_path=taxonomy_path,
             )
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            torch.save({"embeddings": self._embs, "items": self._meta}, str(cache_path))
+            torch.save(
+                {"embeddings": self._embs, "items": self._meta, "cache_version": CACHE_VERSION},
+                str(cache_path),
+            )
             log.info("Gallery cached to %s (%d items)", cache_path, len(self._meta))
 
         log.info("Gallery ready: %d embeddings, dim=%d", self._embs.shape[0], self._embs.shape[1])
+
+        # ── recording id → absolute audio path lookup ───────────────────────────
+        self._audio_map: dict[str, Path] = self._build_audio_map(audio_root)
+        log.info(
+            "Audio path map: %d/%d recordings resolved to a file on disk",
+            sum(1 for p in self._audio_map.values() if p.is_file()),
+            len(self._meta),
+        )
+
+        # ── species description lookup (Tier 2) ────────────────────────────────
+        self._desc_map: dict[str, str] = self._load_species_descriptions(species_descriptions_path)
+
+        # ── species name → gallery index list (for text search routing) ──────
+        # Keyed by the normalised name (lower-cased, stripped) so lookups are
+        # case-insensitive even if desc_map and metadata CSV differ in case.
+        self._species_to_indices: dict[str, list[int]] = {}
+        for i, item in enumerate(self._meta):
+            sp = (item.get("species") or "").strip()
+            if sp:
+                self._species_to_indices.setdefault(sp.lower(), []).append(i)
+        log.info(
+            "Species index: %d distinct species across %d gallery entries",
+            len(self._species_to_indices),
+            len(self._meta),
+        )
+
+        # ── acoustic text gallery for describe_audio (kept for Tier 3) ────────
+        self._text_embs: torch.Tensor | None = None
+        self._text_strings: list[str] = []
+        self._build_text_gallery(clap_descriptions_path)
+
+        # ── per-species text embeddings for text→text catalog search ──────────
+        # Built unconditionally from desc_map (no dependency on clap_descriptions.json).
+        # Cross-modal text→audio similarity is degraded after audio-only fine-tuning;
+        # text→text (same encoder on both sides) is reliable.
+        self._species_text_embs: torch.Tensor | None = None
+        self._species_names_list: list[str] = []
+        self._build_species_text_gallery()
+
+    # ── audio path helpers ──────────────────────────────────────────────────────
+
+    def _build_audio_map(self, audio_root: str) -> dict[str, Path]:
+        """Build recording_id → Path for every gallery item.
+
+        Strategy (in order of preference):
+        1. Use ``audio_rel`` stored in each meta entry (new caches built after this change).
+        2. Fall back to scanning ``audio_root`` by file stem — this makes *old* gallery
+           caches work immediately without a rebuild.
+        WAV is preferred over MP3 when both exist (lossless, faster decode).
+        """
+        root = Path(audio_root)
+        audio_map: dict[str, Path] = {}
+
+        # Pass 1: use audio_rel from meta (exact, no fs scan needed).
+        # Prefer the original MP3 over the 10-second training WAV sidecar so
+        # users hear the full recording, not the training clip.
+        for item in self._meta:
+            audio_rel = item.get("audio_rel", "")
+            if not audio_rel:
+                continue
+            full = root / audio_rel
+            mp3 = full.with_suffix(".mp3")
+            wav = full.with_suffix(".wav")
+            if mp3.is_file():
+                audio_map[item["id"]] = mp3
+            elif wav.is_file():
+                audio_map[item["id"]] = wav
+            elif full.is_file():
+                audio_map[item["id"]] = full
+
+        if audio_map:
+            log.info("Audio map built from gallery meta audio_rel: %d entries", len(audio_map))
+            return audio_map
+
+        # Pass 2: no audio_rel in cache — scan the directory tree by stem
+        if not root.is_dir():
+            log.warning("audio_root %r is not a directory — audio serving disabled", audio_root)
+            return {}
+
+        log.info("Gallery meta has no audio_rel — scanning %s for audio files…", root)
+        stem_map: dict[str, Path] = {}
+        for path in root.rglob("*"):
+            if path.suffix.lower() not in (".wav", ".mp3", ".ogg", ".flac"):
+                continue
+            stem = path.stem
+            existing = stem_map.get(stem)
+            # Prefer MP3 (full recording) over WAV (10-second training sidecar)
+            if existing is None:
+                stem_map[stem] = path
+            elif path.suffix.lower() == ".mp3" and existing.suffix.lower() != ".mp3":
+                stem_map[stem] = path
+
+        # Only keep entries whose stem matches a gallery item id
+        gallery_ids = {item["id"] for item in self._meta}
+        for stem, path in stem_map.items():
+            if stem in gallery_ids:
+                audio_map[stem] = path
+
+        log.info("Directory scan resolved %d/%d gallery recordings", len(audio_map), len(self._meta))
+        return audio_map
+
+    # ── description helpers ─────────────────────────────────────────────────────
+
+    def _load_species_descriptions(self, path: str) -> dict[str, str]:
+        """Load species_descriptions.json → {common_name: truncated_text}."""
+        p = Path(path)
+        if not p.is_file():
+            log.warning("species_descriptions.json not found at %r — species descriptions unavailable", path)
+            return {}
+        with open(p, encoding="utf-8") as f:
+            raw = json.load(f)
+        result: dict[str, str] = {}
+        for name, val in raw.items():
+            text = val.get("text", "") if isinstance(val, dict) else str(val)
+            text = text.strip()
+            if text:
+                result[name] = _truncate_description(text)
+        log.info("Loaded species descriptions: %d entries", len(result))
+        return result
+
+    def _build_text_gallery(self, path: str) -> None:
+        """Encode all CLAP training descriptions into a searchable text embedding matrix."""
+        p = Path(path)
+        if not p.is_file():
+            log.warning(
+                "clap_descriptions.json not found at %r — describe_audio will return empty", path
+            )
+            return
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+
+        all_texts: list[str] = []
+        for descs in data.values():
+            if isinstance(descs, list):
+                for d in descs:
+                    if isinstance(d, str) and d.strip():
+                        all_texts.append(d.strip())
+
+        if not all_texts:
+            log.warning("clap_descriptions.json contained no usable strings")
+            return
+
+        log.info("Building acoustic text gallery from %d descriptions…", len(all_texts))
+        batch_size = 256
+        chunks: list[torch.Tensor] = []
+        for i in range(0, len(all_texts), batch_size):
+            chunks.append(self._encode_text(all_texts[i : i + batch_size]))
+
+        self._text_embs = torch.cat(chunks, dim=0)
+        self._text_strings = all_texts
+        log.info("Acoustic text gallery ready: %d embeddings", len(self._text_strings))
+
+    def _build_species_text_gallery(self) -> None:
+        """Encode every species as text for reliable text→text catalog search.
+
+        Independent of clap_descriptions.json — uses species_descriptions.json
+        (desc_map) which is always available.  Keyed by lower-cased name to
+        match the normalised keys in _species_to_indices.
+        """
+        if not self._desc_map:
+            log.warning("desc_map empty — species text gallery unavailable, text search will fall back to cross-modal")
+            return
+
+        sp_names: list[str] = []
+        sp_texts: list[str] = []
+        for name, desc in self._desc_map.items():
+            sp_names.append(name)
+            sp_texts.append(f"{name} — {desc}" if desc else name)
+
+        log.info("Building species text gallery from %d species…", len(sp_names))
+        batch_size = 256
+        sp_chunks: list[torch.Tensor] = []
+        for i in range(0, len(sp_texts), batch_size):
+            sp_chunks.append(self._encode_text(sp_texts[i : i + batch_size]))
+
+        self._species_text_embs = torch.cat(sp_chunks, dim=0)
+        self._species_names_list = sp_names
+
+        # Sanity-check: how many species in desc_map have recordings in the gallery?
+        matched = sum(1 for n in sp_names if n.lower() in self._species_to_indices)
+        log.info(
+            "Species text gallery ready: %d species embeddings (%d/%d have gallery recordings)",
+            len(sp_names), matched, len(sp_names),
+        )
 
     # ── gallery construction ────────────────────────────────────────────────────
 
@@ -249,6 +487,8 @@ class ClapProvider(InferenceProvider):
                 "vocalization_type": voc_type or None,
                 "duration": item["duration"] or None,
                 "species_code": species_code or None,
+                # audio_rel stored so _audio_map survives cache reloads
+                "audio_rel": audio_rel,
                 "audio_url": None,
                 "image_url": None,
             }
@@ -299,17 +539,78 @@ class ClapProvider(InferenceProvider):
 
     # ── retrieval ───────────────────────────────────────────────────────────────
 
+    def get_audio_path(self, recording_id: str) -> Path | None:
+        path = self._audio_map.get(recording_id)
+        return path if path and path.is_file() else None
+
     def _top_k(self, query_emb: torch.Tensor, top_k: int) -> list[dict[str, Any]]:
         sims = (query_emb @ self._embs.T).squeeze(0)
         k = min(top_k, len(self._meta))
         scores, indices = torch.topk(sims, k)
-        return [{**self._meta[i], "score": round(float(s), 4)} for s, i in zip(scores.tolist(), indices.tolist())]
+        results = []
+        for s, i in zip(scores.tolist(), indices.tolist()):
+            item: dict[str, Any] = {**self._meta[i], "score": round(float(s), 4)}
+            # Set audio_url from map — None if file not on disk
+            recording_id = item.get("id", "")
+            if recording_id in self._audio_map and self._audio_map[recording_id].is_file():
+                item["audio_url"] = f"/api/audio/{recording_id}"
+            else:
+                item["audio_url"] = None
+            # Attach species description if not already baked into cached metadata
+            if "species_description" not in item:
+                item["species_description"] = self._desc_map.get(item.get("species", ""))
+            results.append(item)
+        return results
 
     # ── InferenceProvider interface ─────────────────────────────────────────────
 
     def search_text(self, query: str, top_k: int) -> list[dict[str, Any]]:
-        emb = self._encode_text([query])
-        return self._top_k(emb, top_k)
+        """Catalog text search via text-to-text species matching.
+
+        Fine-tuning on audio-only pairs degrades cross-modal text→audio alignment.
+        Text→text (same encoder on both sides) is unaffected and returns reliable
+        results.  Falls back to cross-modal only if the species gallery is absent.
+        """
+        query_emb = self._encode_text([query])  # (1, dim)
+
+        if self._species_text_embs is not None and self._species_names_list:
+            sims = (query_emb @ self._species_text_embs.T).squeeze(0)
+            # Fetch more candidates than top_k so we can skip species with no recordings
+            k_sp = min(len(self._species_names_list), max(top_k * 4, 40))
+            sp_scores, sp_indices = torch.topk(sims, k_sp)
+
+            results: list[dict[str, Any]] = []
+            for score, sp_idx in zip(sp_scores.tolist(), sp_indices.tolist()):
+                sp = self._species_names_list[sp_idx]
+                # _species_to_indices is keyed by lower-cased name
+                meta_indices = self._species_to_indices.get(sp.lower(), [])
+                if not meta_indices:
+                    log.debug("text search: no gallery recordings for species %r", sp)
+                    continue
+                # Return up to 2 recordings per matched species for variety
+                for mi in meta_indices[:2]:
+                    item: dict[str, Any] = {**self._meta[mi], "score": round(float(score), 4)}
+                    rid = item.get("id", "")
+                    item["audio_url"] = (
+                        f"/api/audio/{rid}"
+                        if rid in self._audio_map and self._audio_map[rid].is_file()
+                        else None
+                    )
+                    item["species_description"] = self._desc_map.get(item.get("species", ""))
+                    results.append(item)
+                    if len(results) >= top_k:
+                        break
+                if len(results) >= top_k:
+                    break
+
+            if results:
+                log.debug("text search returned %d results via text→text path", len(results))
+                return results
+            log.warning("text→text search produced no results (0 species matched in gallery) — falling back to cross-modal")
+
+        # Fallback: original cross-modal text→audio (used when species gallery absent
+        # or when no matched species have recordings in the gallery)
+        return self._top_k(query_emb, top_k)
 
     def search_by_audio(self, file_bytes: bytes, filename: str, top_k: int) -> list[dict[str, Any]]:
         wav = _decode_bytes(file_bytes)
@@ -318,6 +619,33 @@ class ClapProvider(InferenceProvider):
             raise BackendError(422, "AUDIO_DECODE_FAILED", "Could not decode audio. Provide a WAV or MP3 file.")
         emb = self._encode_audio([wav])
         return self._top_k(emb, top_k)
+
+    def describe_audio(self, file_bytes: bytes, filename: str, top_k: int = 4) -> list[str]:
+        """Return acoustic descriptions for species nearest to the audio embedding.
+
+        Uses the same audio gallery path as search_by_audio so the output is always
+        consistent with similarity search results.  Cross-modal text similarity is
+        unreliable after audio-only fine-tuning, so we route through _top_k instead.
+        """
+        wav = _decode_bytes(file_bytes)
+        if wav is None:
+            return []
+        emb = self._encode_audio([wav])
+        # Pull extra candidates so we can collect top_k distinct species
+        hits = self._top_k(emb, top_k * 5)
+        seen: set[str] = set()
+        out: list[str] = []
+        for item in hits:
+            sp = item.get("species", "") or item.get("common_name", "")
+            if not sp or sp in seen:
+                continue
+            seen.add(sp)
+            desc = self._desc_map.get(sp)
+            if desc:
+                out.append(desc)
+            if len(out) >= top_k:
+                break
+        return out
 
     def classify_audio(self, file_bytes: bytes, filename: str, top_k: int) -> list[dict[str, Any]]:
         wav = _decode_bytes(file_bytes)
