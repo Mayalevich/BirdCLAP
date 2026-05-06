@@ -2,7 +2,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import type { SearchResult } from "@/api/types";
 import { rememberResult } from "@/api/backend";
-import { drawMockSpectrogram, drawSpectrogramFromFile } from "@/lib/spectrogramCanvas";
+import {
+  drawMockSpectrogram,
+  drawSpectrogramFromFile,
+  drawSpectrogramFromUrl,
+} from "@/lib/spectrogramCanvas";
 import { useAppPreferences } from "@/context/AppPreferences";
 import { useSaved } from "@/context/SavedContext";
 
@@ -22,18 +26,20 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
 
   useEffect(() => {
     if (!canvasEl) return;
-    let cancelled = false;
+    const ac = new AbortController();
     if (spectrogramFile) {
       drawSpectrogramFromFile(canvasEl, spectrogramFile).catch(() => {
-        if (!cancelled) drawMockSpectrogram(canvasEl, result.id);
+        if (!ac.signal.aborted) drawMockSpectrogram(canvasEl, result.id);
+      });
+    } else if (result.audioUrl) {
+      drawSpectrogramFromUrl(canvasEl, result.audioUrl, 320, 96, ac.signal).catch(() => {
+        if (!ac.signal.aborted) drawMockSpectrogram(canvasEl, result.id);
       });
     } else {
       drawMockSpectrogram(canvasEl, result.id);
     }
-    return () => {
-      cancelled = true;
-    };
-  }, [canvasEl, result.id, spectrogramFile]);
+    return () => ac.abort();
+  }, [canvasEl, result.id, result.audioUrl, spectrogramFile]);
 
   const handleCompare = () => {
     rememberResult(result);
@@ -83,10 +89,25 @@ export function ResultCard({ result, spectrogramFile }: ResultCardProps) {
       </div>
       <div className="result-card__spec">
         <canvas ref={setCanvasEl} className="result-card__canvas" aria-hidden />
+        {result.audioUrl ? (
+          <audio
+            className="result-card__audio"
+            controls
+            preload="none"
+            src={result.audioUrl}
+            aria-label={`Audio playback for ${result.commonName} ${result.vocalizationType}`}
+          />
+        ) : null}
       </div>
+      {result.speciesDescription ? (
+        <details className="result-card__voc-desc">
+          <summary className="result-card__voc-desc-toggle">Vocalization notes</summary>
+          <p className="result-card__voc-desc-text">{result.speciesDescription}</p>
+        </details>
+      ) : null}
       <div className="result-card__actions">
-        <Link to={`/viz/${encodeURIComponent(result.id)}`} className="btn btn--outline">
-          Visualize
+        <Link to={`/viz/${encodeURIComponent(result.id)}`} className="btn btn--outline btn--narrow">
+          3-D map
         </Link>
         <button type="button" className="btn btn--ghost" onClick={handleCompare}>
           Compare

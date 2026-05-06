@@ -47,17 +47,25 @@ class Settings:
     metadata_path: str
     taxonomy_path: str
     val_pairs_path: str
+    species_descriptions_path: str
+    clap_descriptions_path: str
 
 
 def load_settings() -> Settings:
     return Settings(
         model_provider=os.getenv("MODEL_PROVIDER", "placeholder").strip().lower(),
         cors_origins=load_cors_origins(),
-        checkpoint_path=os.getenv("CHECKPOINT_PATH", "checkpoints/finetune11/best_r1.pt").strip(),
+        checkpoint_path=os.getenv("CHECKPOINT_PATH", "checkpoints/best.pt").strip(),
         audio_root=os.getenv("AUDIO_ROOT", "scripts/data/xc_audio").strip(),
         gallery_cache=os.getenv("GALLERY_CACHE", "data/gallery_embeddings.pt").strip(),
         base_model=os.getenv("BASE_MODEL", "laion/clap-htsat-fused").strip(),
         metadata_path=os.getenv("METADATA_PATH", "data/xc_metadata_unified.csv").strip(),
         taxonomy_path=os.getenv("TAXONOMY_PATH", "data/species_taxonomy.json").strip(),
         val_pairs_path=os.getenv("VAL_PAIRS_PATH", "data/clap_val_pairs.json").strip(),
+        species_descriptions_path=os.getenv(
+            "SPECIES_DESCRIPTIONS_PATH", "data/species_descriptions.json"
+        ).strip(),
+        clap_descriptions_path=os.getenv(
+            "CLAP_DESCRIPTIONS_PATH", "data/clap_descriptions.json"
+        ).strip(),
     )

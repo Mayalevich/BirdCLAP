@@ -22,6 +22,11 @@ interface SearchApiItem {
   image_url?: string;
   audio_url?: string;
   species_code?: string;
+  species_description?: string;
+}
+
+interface DescribeApiResponse {
+  descriptions: string[];
 }
 
 interface SearchApiResponse {
@@ -93,6 +98,7 @@ function mapItem(row: SearchApiItem): SearchResult {
     similarity: row.score,
     imageUrl: row.image_url || placeholderAvatar(row.title || row.species || "Unknown"),
     audioUrl: row.audio_url,
+    speciesDescription: row.species_description || undefined,
   };
 }
 
@@ -188,6 +194,29 @@ export function getResultById(id: string): SearchResult | undefined {
   const cached = resultCache.get(id);
   if (cached) return cached;
   return loadSaved().find((r) => r.id === id);
+}
+
+/**
+ * POST /api/describe-audio — returns acoustic text descriptions that CLAP associates
+ * with the uploaded clip. Species names are scrubbed; strings describe sound texture,
+ * pitch, rhythm, and pattern. Returns [] if the endpoint is unavailable or the
+ * description gallery hasn't been built.
+ */
+export async function describeAudio(file: File): Promise<string[]> {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("top_k", "4");
+    const response = await fetch(apiFetchUrl("/api/describe-audio"), {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as DescribeApiResponse;
+    return Array.isArray(data.descriptions) ? data.descriptions.filter((d) => d.trim()) : [];
+  } catch {
+    return [];
+  }
 }
 
 /** GET /health — responds instantly (no model load) and is used for the status badge. */

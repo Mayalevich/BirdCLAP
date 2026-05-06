@@ -54,20 +54,15 @@ function binMagnitudes(window: Float32Array, bins: number): Float32Array {
   return out;
 }
 
-/** Decode file and draw a simple spectrogram (STFT magnitude). */
-export async function drawSpectrogramFromFile(
+/** Shared STFT renderer — takes a decoded AudioBuffer. */
+export function drawSpectrogramFromAudioBuffer(
   canvas: HTMLCanvasElement,
-  file: File,
+  buffer: AudioBuffer,
   width = 320,
   height = 96
-): Promise<void> {
+): void {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-
-  const arrayBuf = await file.arrayBuffer();
-  const ctxAudio = new AudioContext();
-  const buffer = await ctxAudio.decodeAudioData(arrayBuf.slice(0));
-  await ctxAudio.close();
 
   const data = buffer.getChannelData(0);
   const winSize = 1024;
@@ -108,4 +103,38 @@ export async function drawSpectrogramFromFile(
       ctx.fillRect(c * colW, height - (b + 1) * rowH, colW + 0.5, rowH + 0.5);
     }
   }
+}
+
+/** Decode a File and draw a real STFT spectrogram. */
+export async function drawSpectrogramFromFile(
+  canvas: HTMLCanvasElement,
+  file: File,
+  width = 320,
+  height = 96
+): Promise<void> {
+  const arrayBuf = await file.arrayBuffer();
+  const ctxAudio = new AudioContext();
+  const buffer = await ctxAudio.decodeAudioData(arrayBuf.slice(0));
+  await ctxAudio.close();
+  drawSpectrogramFromAudioBuffer(canvas, buffer, width, height);
+}
+
+/**
+ * Fetch an audio URL and draw a real STFT spectrogram.
+ * Falls through the same pipeline as drawSpectrogramFromFile.
+ */
+export async function drawSpectrogramFromUrl(
+  canvas: HTMLCanvasElement,
+  url: string,
+  width = 320,
+  height = 96,
+  signal?: AbortSignal
+): Promise<void> {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`Audio fetch failed: ${response.status}`);
+  const arrayBuf = await response.arrayBuffer();
+  const ctxAudio = new AudioContext();
+  const buffer = await ctxAudio.decodeAudioData(arrayBuf.slice(0));
+  await ctxAudio.close();
+  drawSpectrogramFromAudioBuffer(canvas, buffer, width, height);
 }

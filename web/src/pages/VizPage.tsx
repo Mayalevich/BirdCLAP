@@ -14,6 +14,10 @@ export function VizPage() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // For catalog routes: fetch the actual recording from disk via the API
+  const [catalogAudioFile, setCatalogAudioFile] = useState<File | null>(null);
+  const [audioFetchState, setAudioFetchState] = useState<"idle" | "loading" | "done" | "error">("idle");
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onChange);
@@ -30,14 +34,48 @@ export function VizPage() {
   const isUploadRoute = id === "upload";
   const result = id && !isUploadRoute ? getResultById(id) : undefined;
 
+  // Fetch catalog audio once the result is known and it has an audioUrl
+  useEffect(() => {
+    if (isUploadRoute || !result?.audioUrl) {
+      setCatalogAudioFile(null);
+      setAudioFetchState("idle");
+      return;
+    }
+    const ac = new AbortController();
+    setAudioFetchState("loading");
+    fetch(result.audioUrl, { signal: ac.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.blob();
+      })
+      .then((blob) => {
+        if (ac.signal.aborted) return;
+        const filename = result.audioUrl!.split("/").pop() || `${result.recordingId}.wav`;
+        setCatalogAudioFile(new File([blob], filename, { type: blob.type || "audio/wav" }));
+        setAudioFetchState("done");
+      })
+      .catch((err) => {
+        if (ac.signal.aborted) return;
+        console.warn("[VizPage] audio fetch failed:", err);
+        setCatalogAudioFile(null);
+        setAudioFetchState("error");
+      });
+    return () => ac.abort();
+  }, [isUploadRoute, result?.audioUrl, result?.recordingId]);
+
+  // Audio file passed to the 3-D viz: user upload for /upload, fetched catalog recording otherwise
+  const vizAudioFile = isUploadRoute ? uploadedFile : (catalogAudioFile ?? null);
+
   const seed =
     isUploadRoute && uploadedFile
       ? `upload:${uploadedFile.name}:${uploadedFile.lastModified}`
-      : result
-        ? `${result.id}:${result.recordingId}`
-        : id && !isUploadRoute
-          ? `catalog:${id}`
-          : "";
+      : catalogAudioFile
+        ? `catalog:${catalogAudioFile.name}:${catalogAudioFile.size}`
+        : result
+          ? `${result.id}:${result.recordingId}`
+          : id && !isUploadRoute
+            ? `catalog:${id}`
+            : "";
 
   /** Catalog route still shows viz (synthetic) when metadata is cold; upload route needs a file. */
   const showViz =
@@ -48,11 +86,24 @@ export function VizPage() {
     emptyMessage = "No visualization id.";
   } else if (isUploadRoute && !uploadedFile) {
     emptyMessage =
-      "No uploaded file in memory. Choose audio on Query or Home, then open Visualization.";
+      "No uploaded file in memory. Choose audio on Query or Home, then open the 3-D sound map.";
   }
 
-  const sourceLabel =
-    uploadedFile ? uploadedFile.name : isUploadRoute ? "—" : result ? result.commonName : "catalog recording";
+  const audioStatusSuffix = isUploadRoute
+    ? ""
+    : audioFetchState === "loading"
+      ? " · fetching audio…"
+      : audioFetchState === "error"
+        ? " · audio unavailable"
+        : audioFetchState === "idle" && !result?.audioUrl
+          ? " · no audio on disk"
+          : "";
+
+  const sourceLabel = isUploadRoute
+    ? (uploadedFile?.name ?? "—")
+    : catalogAudioFile
+      ? `${result?.commonName ?? "Recording"} · ${catalogAudioFile.name}`
+      : `${result?.commonName ?? "catalog recording"}${audioStatusSuffix}`;
 
   return (
     <div className="page viz-page">
@@ -62,9 +113,9 @@ export function VizPage() {
       <header className="page-header">
         <h1>Spatiotemporal Sound Visualization</h1>
         <p className="muted">
-          Each audio frame becomes a square data point in 3-D space. As the bird sings, every verse
-          assembles into a glowing network — a spatial score you can orbit and read in terms of
-          frequency, amplitude, and temporal evolution. Silence stays dark.
+          Supplemental view alongside BirdCLAP's embedding workflows on Query. Each audio frame becomes a square data
+          point in 3-D space; as the bird sings, every verse assembles into a glowing network — a spatial score you can
+          orbit in terms of frequency, amplitude, and temporal evolution.
         </p>
       </header>
 
@@ -73,7 +124,7 @@ export function VizPage() {
           {!result && !isUploadRoute && id ? (
             <aside className="viz-page__cold-cache panel-alert panel-alert--soft" role="status">
               Species card unavailable for this link (cache empty after refresh).               The 3-D view still runs for this recording.{" "}
-              <Link to="/query">Run a search</Link> and open <strong>Visualize</strong> from the result card to load full species info.
+              <Link to="/query">Run a search</Link> and use <strong>3-D map</strong> on the result card to load full species info.
             </aside>
           ) : null}
           <div className="viz-sound-stack">
@@ -109,7 +160,7 @@ export function VizPage() {
                   </div>
                 }
               >
-                <BirdSoundEmbeddingViz seed={seed} audioFile={uploadedFile} />
+                <BirdSoundEmbeddingViz seed={seed} audioFile={vizAudioFile} />
               </Suspense>
             </div>
             {result ? (
@@ -134,7 +185,7 @@ export function VizPage() {
               <footer className="viz-upload-footer muted small">{uploadedFile.name}</footer>
             ) : !isUploadRoute && id ? (
               <footer className="viz-upload-footer muted small">
-                <Link to="/query">Search the catalog</Link> and open Visualize from a result card to see species info here.
+                <Link to="/query">Search the catalog</Link> and open 3-D map from a result card to see species info here.
               </footer>
             ) : (
               <footer className="viz-upload-footer muted small">—</footer>

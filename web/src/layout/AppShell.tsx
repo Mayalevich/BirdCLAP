@@ -65,29 +65,11 @@ export function AppShell() {
             </svg>
           </span>
           <div className="app-shell__brand-text">
-            <span className="app-shell__title">Bird audio analysis</span>
-            <span className="app-shell__subtitle">Spatiotemporal sound visualization &amp; classification</span>
+            <span className="app-shell__title">BirdCLAP</span>
+            <span className="app-shell__subtitle">
+              Contrastive audio–language embeddings · classification &amp; similarity search
+            </span>
           </div>
-          <span
-            className={`app-shell__api-badge app-shell__api-badge--${apiBadge}`}
-            title={
-              apiBadge === "off"
-                ? "VITE_API_BASE_URL missing"
-                : apiBadge === "checking"
-                  ? "Checking API…"
-                  : apiBadge === "live"
-                    ? "Backend responded to probe"
-                    : "Backend probe failed"
-            }
-          >
-            {apiBadge === "off"
-              ? "No API"
-              : apiBadge === "checking"
-                ? "API…"
-                : apiBadge === "live"
-                  ? "API OK"
-                  : "API down"}
-          </span>
         </div>
         <nav className="app-shell__nav" aria-label="Main">
           <NavLink
@@ -125,11 +107,6 @@ export function AppShell() {
       <main className="app-shell__main" id="main-content">
         <Outlet />
       </main>
-      <footer className="app-shell__footer">
-        <span className="app-shell__footer-note">
-          Each bird verse becomes a 3-D network of data points — a spatial score of frequency, amplitude, and time.
-        </span>
-      </footer>
     </div>
   );
 }
