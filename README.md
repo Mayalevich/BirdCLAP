@@ -1,4 +1,31 @@
-New to the repo? Read **[CODEBASE_GUIDE.md](CODEBASE_GUIDE.md)** for architecture, data contracts, pitfalls, and next steps.
+# BirdCLAP
+
+Natural-language search and retrieval over bird and wildlife audio using joint
+audio–text embeddings (CLAP-style), rather than species-only classifiers. The
+repo covers the full stack: a data pipeline over Xeno-Canto, contrastive
+fine-tuning of `laion/clap-htsat-fused`, a FastAPI inference backend, and a
+React + Vite web UI.
+
+> **New to the repo?** Read **[CODEBASE_GUIDE.md](CODEBASE_GUIDE.md)** for
+> architecture, data contracts, pitfalls, and next steps, and
+> **[SETUP.md](SETUP.md)** to run the full stack on a new machine.
+
+## Repository layout
+
+| Path | Purpose |
+|------|---------|
+| `scripts/` | Data pipeline, training, and evaluation scripts (documented below) |
+| `backend/` | FastAPI service wrapping the fine-tuned CLAP model — see [docs/BACKEND.md](docs/BACKEND.md) |
+| `web/` | React + Vite single-page app — see [web/README.md](web/README.md) |
+| `data/` | Training pairs, metadata, species descriptions, gallery cache |
+| `results/` | Evaluation outputs (`eval_results*.json`) and figures |
+| `docs/` | Extended documentation (backend, training, scripts) |
+| `checkpoints/` | Fine-tuned weights (**gitignored**) |
+| `requirements.txt` / `requirements-ml.txt` | Core / ML Python dependencies |
+| `start.ps1` | One-command launcher for the FastAPI + Vite stack |
+
+The sections below cover the **ML pipeline** (data → training → evaluation).
+To run the live app (backend + web UI), follow **[SETUP.md](SETUP.md)**.
 
 ## Setup
 
