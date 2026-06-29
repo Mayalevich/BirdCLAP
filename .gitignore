@@ -19,3 +19,14 @@ web/.vite/
 # Optional local caches
 *.log
 npm-debug.log*
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS cruft
+.DS_Store
