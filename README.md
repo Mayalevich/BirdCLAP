@@ -165,17 +165,17 @@ Evaluates text-to-audio retrieval on the held-out val set across 8 query strateg
 | `all_variants` | Ensemble of all 8 label variants per combo (free inference improvement) |
 
 ```bash
-# Fine-tuned checkpoint
-python scripts/evaluate_clap.py --checkpoint checkpoints/run6/best.pt
+# Best fine-tuned checkpoint (the one in Final results, below)
+python scripts/evaluate_clap.py --checkpoint checkpoints/finetune11/best_r1.pt
 
 # Fine-tuned vs base model (zero-shot baseline)
-python scripts/evaluate_clap.py --checkpoint checkpoints/run6/best.pt --also-base
+python scripts/evaluate_clap.py --checkpoint checkpoints/finetune11/best_r1.pt --also-base
 
 # Base model only (zero-shot)
 python scripts/evaluate_clap.py
 
 # Full semantic eval suite (requires hand-written query file)
-python scripts/evaluate_clap.py --checkpoint checkpoints/run6/best.pt \
+python scripts/evaluate_clap.py --checkpoint checkpoints/finetune11/best_r1.pt \
     --semantic-queries data/semantic_queries_example.json \
     --acoustic-coherence \
     --cross-species-eval
@@ -208,13 +208,50 @@ Three opt-in evaluations probe whether the model learned *acoustic* semantics ra
 - **`--acoustic-coherence`** — encodes one rich acoustic description per combo and checks whether top-K nearest neighbours in text-embedding space share the same genus/family. Genus R@K >> random → model learned acoustic structure.
 - **`--cross-species-eval`** — uses species A's acoustic description to retrieve species B's audio (same genus, different species). Above-random R@K → transferable acoustic features learned.
 
+### Final results
+
+The project is **complete**. Fine-tuning `laion/clap-htsat-fused` on the
+BirdCLAP pairs turns near-random zero-shot CLAP into a usable text→audio
+retriever. Numbers below are text→audio retrieval on the held-out validation
+set (**1,921 clips across 722 species × vocalization combos**), fine-tuned
+checkpoint vs. the zero-shot base model.
+
+| Query strategy | mAP | MRR | R@1 | R@5 | R@10 |
+|---|---|---|---|---|---|
+| `name` | 0.216 | 0.314 | 0.078 | 0.264 | 0.359 |
+| `scientific` | 0.190 | 0.282 | 0.074 | 0.213 | 0.308 |
+| `chain` | 0.190 | 0.284 | 0.074 | 0.213 | 0.317 |
+| `sci_common` | 0.223 | 0.327 | 0.088 | 0.260 | 0.376 |
+| `chain_common` | 0.223 | 0.330 | 0.086 | 0.265 | 0.381 |
+| `rich` | 0.222 | 0.326 | 0.082 | 0.267 | 0.378 |
+| `rich_holdout` | 0.210 | 0.309 | 0.077 | 0.249 | 0.356 |
+| **`all_variants`** (best) | **0.231** | **0.336** | **0.091** | **0.270** | **0.387** |
+| base CLAP, zero-shot (`all_variants`) | 0.014 | 0.025 | 0.002 | 0.012 | 0.021 |
+
+The best ensemble strategy (`all_variants`) lifts mAP **~16×** over zero-shot
+base CLAP (0.231 vs 0.014) and R@10 from 2% to 39%. Notably, held-out rich
+descriptions (`rich_holdout`, text never seen in training) retrieve almost as
+well as templated names — the model learned acoustic semantics, not just
+species-name lookup.
+
+Full per-query metrics and figures are under `results/` (see
+`eval_results_finetune11.json` and `results/figures/`).
+
 ### Run history
 
-| Run | Epochs | Notes |
-|---|---|---|
-| run 1–2 | — | Initial experiments |
-| run 3–4 | — | Dataset and label improvements |
-| run 5 | 20 | Low LR (audio encoder effectively frozen at 5e-7) |
-| run 6 | ongoing | Differential LR, WeightedRandomSampler, SpecAugment, hard negative boosting, mixup, ensemble eval, logit_scale freeze, ParetoCheckpointManager |
+A dozen fine-tuning runs were trained and evaluated; the table below
+summarizes the progression. Run 11 produced the best comparable checkpoint
+(reported above). Run 12 was the final run — it marginally improved mAP
+(0.216 → 0.256 on `name`) but underperformed expectations on R@1; the
+post-mortem is documented in
+[docs/12th_Fine_Tune_Failure_Analysis.md](docs/12th_Fine_Tune_Failure_Analysis.md).
+
+| Run | Notes |
+|---|---|
+| 1–4 | Initial experiments; dataset and label-pool improvements |
+| 5 | 20 epochs, low LR (audio encoder effectively frozen at 5e-7) |
+| 6–10 | Differential LR, WeightedRandomSampler, SpecAugment, hard-negative boosting, mixup, ensemble eval, `logit_scale` freeze, ParetoCheckpointManager |
+| **11** | **Best checkpoint** (`checkpoints/finetune11/best_r1.pt`) — results reported above |
+| 12 | Final run; see failure analysis post-mortem |
 
 
